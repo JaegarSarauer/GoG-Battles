@@ -10,8 +10,7 @@ class ModifierData {
         this.modifierQuality = (modifierTier + 1);
         this.rarityPoints = modifierDef.rarityPoints[modifierTier];
         this.rollChance = modifierDef.rollChances[modifierTier];
-        this.stats = modifierDef.stats;
-        this.stats.multiply(this.modifierQuality);
+        this.stats = Stats.multiply(modifierDef.stats, this.modifierQuality);
     }
 }
 
@@ -53,8 +52,11 @@ class CardDef {
     }
 }
 
+var cardIDCounter = 0;
+
 class Card {
     constructor(equipmentType, equipmentClass, subType, baseStats, rarityTier, modifer, GOGTokenValue) {
+        this.cardID = cardIDCounter++;
         this.equipmentType = equipmentType;
         this.equipmentClass = equipmentClass;
         this.subType = subType;
@@ -63,6 +65,7 @@ class Card {
         this.GOGTokenValue = GOGTokenValue;
         this.baseStats = baseStats;
         this.totalStats = Stats.combine(this.baseStats, this.modifier.stats);
+        this.rollChance = C.CalculateRollChance(C.RarityTierToPoint[this.rarityTier], this.modifier.rarityPoints);
     }
 }
 
@@ -205,6 +208,10 @@ const CardDefCatalog = {
     AMULET_OF_MAXIMUM_HEALTH: new CardDef(C.EquipmentType.AMULET, C.EquipmentClass.ALL, C.SubType.HEALTH, new Stats([0, 0, 0], [0, 0, 0], 30), C.RarityTierToPoint.ROYAL, 1000),
 };
 
+export const CardCatalog = [
+
+];
+
 const BuildCardCatalog = () => {
     let cardDefKeys = Object.keys(CardDefCatalog);
     for (let i = 0; i < cardDefKeys.length; ++i) {
@@ -215,10 +222,4 @@ const BuildCardCatalog = () => {
     }
 };
 
-let CardCatalog = [
-
-];
-
 BuildCardCatalog();
-
-console.info(CardCatalog.length, CardCatalog);

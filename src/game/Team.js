@@ -1,6 +1,6 @@
 const { Adventurer } = require("./Adventurer");
 
-class Team {
+export default class Team {
     constructor() {
         this.adventurers = [new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer()];
     }
@@ -10,10 +10,7 @@ class Team {
             console.error('Could not apply damage to null adv.');
             return;
         }
-        this.adventurers[advID].hp -= damage;
-        if (this.adventurers[advID].hp <= 0) {
-            this.adventurers[advID] = null;
-        }
+        this.adventurers[advID].damage(damage);
     }
 
     getRandomAdventurer() {

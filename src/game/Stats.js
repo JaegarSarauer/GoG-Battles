@@ -5,12 +5,24 @@ export default class Stats {
         this.hp = hp;
     }
 
-    multiply(modifierQuality) {
+    static multiply(stats, modifierQuality) {
+        let newStats = new Stats();
         for (let i = 0; i < 3; ++i) {
-            this.offense[i] *= modifierQuality;
-            this.defense[i] *= modifierQuality;
+            newStats.offense[i] = stats.offense[i] * modifierQuality;
+            newStats.defense[i] = stats.defense[i] * modifierQuality;
         }
-        this.hp *= modifierQuality;
+        newStats.hp = stats.hp * modifierQuality;
+        return newStats;
+    }
+
+    static subtract(stats1, stats2) {
+        let newStats = new Stats();
+        for (let i = 0; i < 3; ++i) {
+            newStats.offense[i] = stats1.offense[i] - stats2.offense[i];
+            newStats.defense[i] = stats1.defense[i] - stats2.defense[i];
+        }
+        newStats.hp = stats1.hp - stats2.hp;
+        return newStats;
     }
 
     static combine(stats1, stats2) {

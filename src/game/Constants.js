@@ -56,6 +56,11 @@ export const RarityTierToPoint = {
     ULTIMATE: 50,
 };
 
+export const CalculateRollChance = (rarityTierPoints, modifierRarityPoints) => {
+    let totalPoints = rarityTierPoints + modifierRarityPoints;
+    return 5 + Math.pow(totalPoints, 4.73);
+};
+
 export const RarityPointToTier = (points) => {
     if (points < RarityTierToPoint.UNCOMMON) {
         return RarityTier.COMMON;

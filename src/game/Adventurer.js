@@ -1,10 +1,8 @@
-
+import Stats from "./Stats";
 
 export default class Adventurer {
     constructor() {
-        this.hp = 100;
-        this.offense = [0, 0, 0];
-        this.defense = [0, 0, 0];
+        this.stats = new Stats();
         this.cardSlots = {
             HELMET: null,
             CHEST: null,
@@ -16,34 +14,23 @@ export default class Adventurer {
         this.attackClass = EquipmentClass.MELEE;
     }
 
-    applyCard(card) {
-        let offenseStats = [0, 0, 0];
-        let defenseStats = [0, 0, 0];
+    damage(damage) {
 
+    }
+
+    applyCard(card) {
         if (card == null) {
             return;
         }
         
-        if (isTypeAmulet(card)) {
-            offenseStats = AmuletOffensePointLookup(card.subType, card.tier);
-            defenseStats = AmuletDefensePointLookup(card.subType, card.tier);
-        } else {
-            if (isTypeWeapon(card)) {
-                this.attackClass = card.equipmentClass;
-                offenseStats = OffensePointLookup(card.equipmentType, card.tier);
-            } else {
-                defenseStats = DefensePointLookup(card.equipmentType, card.tier);
-            }
-        }
+        this.stats = Stats.combine(this.stats, card.stats);
+    }
 
-        for (let i = 0; i < 3; ++i) {
-            this.offense[i] += offenseStats[i];
-            this.defense[i] += defenseStats[i];
+    removeCard(card) {
+        if (card == null) {
+            return;
         }
-
-        //handle HP
-        if (defenseStats.length == 4) {
-            this.hp += defenseStats[3];
-        }
+        
+        this.stats = Stats.subtract(this.stats, card.stats);
     }
 }
