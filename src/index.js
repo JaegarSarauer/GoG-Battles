@@ -1,6 +1,7 @@
 import Card from './game/Card';
 import Account from './game/Account';
 import USDCContract from './game/USDCContract';
+import CardGeneratorTester from './CardGeneratorTester';
 
 class Controller {
     constructor() {
@@ -155,6 +156,8 @@ let handle = setInterval(() => {
     if (document.getElementsByTagName('body').length > 0 && gameController == null) {
         gameController = new GameController();
         gameController.addChild(new MainGameBar());
+
+        new CardGeneratorTester().createAccounts();
     } else {
         clearInterval(handle);
     }

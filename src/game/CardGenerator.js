@@ -6,7 +6,9 @@ import {CardCatalog} from './Card';
 
 class CardGenerator {
     constructor() {
-        this.cardCatalogIndex = 0;
+        this.cardCatalogIndexIndex = 0;
+        let quarterSize = Math.floor(CardCatalog.length / 4);
+        this.cardCatalogIndexes = [0, quarterSize, quarterSize*2, quarterSize*3];
     }
 
     rollCards(GOGTokenAmount) {
@@ -31,21 +33,29 @@ class CardGenerator {
     }
 
     _rollFromCardList(GOGTokenAmount) {
-        let rollingCard = CardCatalog[this.cardCatalogIndex];
+        let rollingCard = CardCatalog[this._getCardCatalogIndex()];
+        this._updateCardCatalogIndex();
+
         //Check if they deposited enough tokens to earn this card.
         if (rollingCard.GOGTokenValue <= GOGTokenAmount) {
             let roll = Math.random() * rollingCard.rollChance;
-            if (roll <= 1) {
-                this.cardCatalogIndex = (this.cardCatalogIndex + 1) % CardCatalog.length;
+            if (roll <= Math.min(rollingCard.rollChance / 2, GOGTokenAmount)) {
                 return rollingCard;
             } else {
-                this.cardCatalogIndex = (this.cardCatalogIndex + 1) % CardCatalog.length;
                 return this._rollFromCardList(GOGTokenAmount);
             }
         } else {
-            this.cardCatalogIndex = (this.cardCatalogIndex + 1) % CardCatalog.length;
             return this._rollFromCardList(GOGTokenAmount);
         }
+    }
+
+    _getCardCatalogIndex() {
+        return this.cardCatalogIndexes[this.cardCatalogIndexIndex];
+    }
+
+    _updateCardCatalogIndex() {
+        this.cardCatalogIndexes[this.cardCatalogIndexIndex] = (this.cardCatalogIndexes[this.cardCatalogIndexIndex] + 1) % CardCatalog.length;
+        this.cardCatalogIndexIndex = (this.cardCatalogIndexIndex + 3) % this.cardCatalogIndexes.length;
     }
 }
 

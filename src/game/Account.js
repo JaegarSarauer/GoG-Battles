@@ -12,12 +12,15 @@ export default class Account {
     }
 
     addCards(cardArray) {
-        for (let i = 0; i < cardArray; ++i) {
+        for (let i = 0; i < cardArray.length; ++i) {
             let card = cardArray[i];
             if (this.cards[card.cardID] == null) {
-                this.cards[card.cardID] = 0;
+                this.cards[card.cardID] = {
+                    amount: 0,
+                    rarity: card.rarityTier,
+                };
             } 
-            this.cards[card.cardID] += 1;
+            this.cards[card.cardID].amount += 1;
         }
     }
 }
