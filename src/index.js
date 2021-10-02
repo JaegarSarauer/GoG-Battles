@@ -13,6 +13,20 @@ class Controller {
     destroy() {}
 }
 
+class BattleManagerController extends Controller {
+    constructor() {
+        super();
+
+        this.container = document.createElement('div');
+        this.container.style.borderStyle = 'solid';
+        this.container.style.borderWidth = 'thin';
+    }
+
+    render() {
+        return this.container;
+    }
+}
+
 class AccountController extends Controller {
     constructor(accID) {
         super();
@@ -58,6 +72,17 @@ class AccountController extends Controller {
         //     this.withdrawUSDC();
         // };
         // this.container.appendChild(this.withdrawUSDC);
+
+        this.createBattleButton = document.createElement('button');
+        this.createBattleButton.innerText = 'Deposit USDC to Contract';
+        this.createBattleButton.onclick = () => {
+            this.createBattle();
+        };
+        this.container.appendChild(this.createBattleButton);
+    }
+
+    createBattle() {
+
     }
 
     addUSDC() {
@@ -156,8 +181,9 @@ let handle = setInterval(() => {
     if (document.getElementsByTagName('body').length > 0 && gameController == null) {
         gameController = new GameController();
         gameController.addChild(new MainGameBar());
+        gameController.addChild(new BattleManagerController());
 
-        new CardGeneratorTester().createAccounts();
+        //new CardGeneratorTester().createAccounts();
     } else {
         clearInterval(handle);
     }

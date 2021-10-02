@@ -21,8 +21,7 @@ export const EquipmentType = {
     CHEST: 'CHEST',
     LEGS: 'LEGS',
     WEAPON: 'WEAPON',
-    WEAPON_OFFHAND: 'WEAPON_OFFHAND',
-    SHIELD: 'SHEILD',
+    SHIELD: 'SHIELD',
     AMULET: 'AMULET',
 };
 

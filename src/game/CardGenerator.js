@@ -1,4 +1,4 @@
-import {CardCatalog} from './Card';
+import {CardCatalog, GetSmallestCardTokenValue} from './Card';
 /*
 
 
@@ -17,7 +17,7 @@ class CardGenerator {
         let cardsAwarded = [];
 
         while (tokensLeft > 0) {
-            if (tokensLeft < 5) {
+            if (tokensLeft < GetSmallestCardTokenValue()) {
                 tokensAwarded += tokensLeft;
                 tokensLeft = 0;
             } else {

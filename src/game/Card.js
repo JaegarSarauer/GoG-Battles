@@ -2,6 +2,13 @@ import * as C from './Constants';
 import ModifierRollTable from './ModifierRollTable';
 import Stats from './Stats';
 
+// Auto updated
+var smallestTokenValue = 10000000;
+
+export const GetSmallestCardTokenValue = () => {
+    return smallestTokenValue;
+};
+
 class ModifierData {
     constructor(modifierID, modifierTier) {
         let modifierDef = C.Modifiers[modifierID];
@@ -26,7 +33,7 @@ class CardDef {
     }
 
     _getApplicableModifierRollTable(equipmentType) {
-        if (equipmentType == C.EquipmentType.WEAPON || C.EquipmentType.WEAPON_OFFHAND) {
+        if (equipmentType == C.EquipmentType.WEAPON || equipmentType == C.EquipmentType.SHIELD) {
             return ModifierRollTables.WEAPON;
         } else if (equipmentType == C.EquipmentType.AMULET) {
             return ModifierRollTables.ALL;
@@ -44,6 +51,9 @@ class CardDef {
                 let rarityPoints = this.rarityBasePoints + modifierDef.rarityPoints[j];
                 let rarityTier = C.RarityPointToTier(rarityPoints);
                 let modifierData = new ModifierData(modifierID, j);
+                if (this.GOGTokenBaseValue < smallestTokenValue) {
+                    smallestTokenValue = this.GOGTokenBaseValue;
+                }
                 let card = new Card(this.equipmentType, this.equipmentClass, this.subType, this.baseStats, rarityTier, modifierData, this.GOGTokenBaseValue);
                 cards.push(card);
             }
@@ -72,17 +82,17 @@ class Card {
 const ModifierRollTables = {
     WEAPON: new ModifierRollTable(C.Modifiers.NONE.id, C.Modifiers.POWER.id, C.Modifiers.REFORGED.id, C.Modifiers.INTELLECT.id, C.Modifiers.ELEMENTAL.id, C.Modifiers.EAGLE_EYE.id, C.Modifiers.ASSASSIN.id, C.Modifiers.BERSERK.id, C.Modifiers.DIVINE.id),
     ARMOR: new ModifierRollTable(C.Modifiers.NONE.id, C.Modifiers.PARRY.id, C.Modifiers.REFORGED.id, C.Modifiers.AURA.id, C.Modifiers.ELEMENTAL.id, C.Modifiers.AGILE.id, C.Modifiers.ASSASSIN.id, C.Modifiers.TANK.id, C.Modifiers.DIVINE.id),
-    ALL: new ModifierRollTable(C.Modifiers.NONE.id, C.Modifiers.POWER.id, C.Modifiers.PARRY.id, C.Modifiers.REFORGED.id, C.Modifiers.INTELLECT.id, C.Modifiers.AURA.id, C.Modifiers.ELEMENTAL.id, C.Modifiers.EAGLE_EYE, C.Modifiers.AGILE.id, C.Modifiers.ASSASSIN.id, C.Modifiers.BERSERK.id, C.Modifiers.TANK.id, C.Modifiers.DIVINE.id),
+    ALL: new ModifierRollTable(C.Modifiers.NONE.id, C.Modifiers.POWER.id, C.Modifiers.PARRY.id, C.Modifiers.REFORGED.id, C.Modifiers.INTELLECT.id, C.Modifiers.AURA.id, C.Modifiers.ELEMENTAL.id, C.Modifiers.EAGLE_EYE.id, C.Modifiers.AGILE.id, C.Modifiers.ASSASSIN.id, C.Modifiers.BERSERK.id, C.Modifiers.TANK.id, C.Modifiers.DIVINE.id),
 };
 
 
 const CardDefCatalog = {
-    COPPER_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [1, -17, 0]), C.RarityTierToPoint.COMMON, 5),
-    IRON_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [2, -11, 0]), C.RarityTierToPoint.COMMON, 10),
-    STEEL_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [4, -7, 0]), C.RarityTierToPoint.UNCOMMON, 25),
-    NELENITE_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [7, -4, 0]), C.RarityTierToPoint.RARE, 50),
-    GOTHITE_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [11, -2, 0]), C.RarityTierToPoint.MYTHICAL, 100),
-    OSMIUM_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [17, -1, 0]), C.RarityTierToPoint.ROYAL, 250),
+    COPPER_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [1, -17, 0]), C.RarityTierToPoint.COMMON, 10),
+    IRON_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [2, -11, 0]), C.RarityTierToPoint.COMMON, 25),
+    STEEL_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [4, -7, 0]), C.RarityTierToPoint.UNCOMMON, 50),
+    NELENITE_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [7, -4, 0]), C.RarityTierToPoint.RARE, 100),
+    GOTHITE_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [11, -2, 0]), C.RarityTierToPoint.MYTHICAL, 250),
+    OSMIUM_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [17, -1, 0]), C.RarityTierToPoint.ROYAL, 500),
     COPPER_CHESTPLATE: new CardDef(C.EquipmentType.CHEST, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [1, -17, 0]), C.RarityTierToPoint.COMMON, 10),
     IRON_CHESTPLATE: new CardDef(C.EquipmentType.CHEST, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [2, -11, 0]), C.RarityTierToPoint.COMMON, 25),
     STEEL_CHESTPLATE: new CardDef(C.EquipmentType.CHEST, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [4, -7, 0]), C.RarityTierToPoint.UNCOMMON, 50),
@@ -95,31 +105,31 @@ const CardDefCatalog = {
     NELENITE_PLATELEGS: new CardDef(C.EquipmentType.LEGS, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [7, -4, 0]), C.RarityTierToPoint.RARE, 100),
     GOTHITE_PLATELEGS: new CardDef(C.EquipmentType.LEGS, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [11, -2, 0]), C.RarityTierToPoint.MYTHICAL, 250),
     OSMIUM_PLATELEGS: new CardDef(C.EquipmentType.LEGS, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [17, -1, 0]), C.RarityTierToPoint.ROYAL, 500),
-    COPPER_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -17, 1]), C.RarityTierToPoint.COMMON, 5),
-    IRON_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -11, 2]), C.RarityTierToPoint.COMMON, 10),
-    STEEL_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -7, 4]), C.RarityTierToPoint.UNCOMMON, 25),
-    NELENITE_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -4, 7]), C.RarityTierToPoint.RARE, 50),
-    GOTHITE_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -2, 11]), C.RarityTierToPoint.MYTHICAL, 100),
-    OSMIUM_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -1, 17]), C.RarityTierToPoint.ROYAL, 250),
-    COPPER_SWORD_OFFHAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -17, 1]), C.RarityTierToPoint.COMMON, 10),
-    IRON_SWORD_OFFHAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -11, 2]), C.RarityTierToPoint.COMMON, 25),
-    STEEL_SWORD_OFFHAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -7, 4]), C.RarityTierToPoint.UNCOMMON, 50),
-    NELENITE_SWORD_OFFHAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -4, 7]), C.RarityTierToPoint.RARE, 100),
-    GOTHITE_SWORD_OFFHAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -2, 11]), C.RarityTierToPoint.MYTHICAL, 250),
-    OSMIUM_SWORD_OFFHAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -1, 17]), C.RarityTierToPoint.ROYAL, 500),
-    COPPER_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [1, -17, 0]), C.RarityTierToPoint.COMMON, 5),
-    IRON_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [2, -11, 0]), C.RarityTierToPoint.COMMON, 10),
-    STEEL_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [4, -7, 0]), C.RarityTierToPoint.UNCOMMON, 25),
-    NELENITE_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [7, -4, 0]), C.RarityTierToPoint.RARE, 50),
-    GOTHITE_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [11, -2, 0]), C.RarityTierToPoint.MYTHICAL, 100),
-    OSMIUM_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [17, -1, 0]), C.RarityTierToPoint.ROYAL, 250),
+    COPPER_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -17, 1]), C.RarityTierToPoint.COMMON, 10),
+    IRON_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -11, 2]), C.RarityTierToPoint.COMMON, 25),
+    STEEL_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -7, 4]), C.RarityTierToPoint.UNCOMMON, 50),
+    NELENITE_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -4, 7]), C.RarityTierToPoint.RARE, 100),
+    GOTHITE_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -2, 11]), C.RarityTierToPoint.MYTHICAL, 250),
+    OSMIUM_SWORD: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -1, 17]), C.RarityTierToPoint.ROYAL, 500),
+    COPPER_SWORD_OFFHAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -17, 1]), C.RarityTierToPoint.COMMON, 10),
+    IRON_SWORD_OFFHAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -11, 2]), C.RarityTierToPoint.COMMON, 25),
+    STEEL_SWORD_OFFHAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -7, 4]), C.RarityTierToPoint.UNCOMMON, 50),
+    NELENITE_SWORD_OFFHAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -4, 7]), C.RarityTierToPoint.RARE, 100),
+    GOTHITE_SWORD_OFFHAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -2, 11]), C.RarityTierToPoint.MYTHICAL, 250),
+    OSMIUM_SWORD_OFFHAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, -1, 17]), C.RarityTierToPoint.ROYAL, 500),
+    COPPER_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [1, -17, 0]), C.RarityTierToPoint.COMMON, 10),
+    IRON_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [2, -11, 0]), C.RarityTierToPoint.COMMON, 25),
+    STEEL_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [4, -7, 0]), C.RarityTierToPoint.UNCOMMON, 50),
+    NELENITE_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [7, -4, 0]), C.RarityTierToPoint.RARE, 100),
+    GOTHITE_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [11, -2, 0]), C.RarityTierToPoint.MYTHICAL, 250),
+    OSMIUM_SHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MELEE, C.SubType.NONE, new Stats([0, 0, 0], [17, -1, 0]), C.RarityTierToPoint.ROYAL, 500),
 
-    BLUE_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 1, -17]), C.RarityTierToPoint.COMMON, 5),
-    GREEN_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 2, -11]), C.RarityTierToPoint.COMMON, 10),
-    PURPLE_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 4, -7]), C.RarityTierToPoint.UNCOMMON, 25),
-    BURGUNDY_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 7, -4]), C.RarityTierToPoint.RARE, 50),
-    RED_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 11, -2]), C.RarityTierToPoint.MYTHICAL, 100),
-    WHITE_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 17, -1]), C.RarityTierToPoint.ROYAL, 250),
+    BLUE_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 1, -17]), C.RarityTierToPoint.COMMON, 10),
+    GREEN_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 2, -11]), C.RarityTierToPoint.COMMON, 25),
+    PURPLE_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 4, -7]), C.RarityTierToPoint.UNCOMMON, 50),
+    BURGUNDY_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 7, -4]), C.RarityTierToPoint.RARE, 100),
+    RED_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 11, -2]), C.RarityTierToPoint.MYTHICAL, 250),
+    WHITE_WIZARD_HAT: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 17, -1]), C.RarityTierToPoint.ROYAL, 500),
     BLUE_WIZARD_ROBE_TOP: new CardDef(C.EquipmentType.CHEST, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 1, -17]), C.RarityTierToPoint.COMMON, 10),
     GREEN_WIZARD_ROBE_TOP: new CardDef(C.EquipmentType.CHEST, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 2, -11]), C.RarityTierToPoint.COMMON, 25),
     PURPLE_WIZARD_ROBE_TOP: new CardDef(C.EquipmentType.CHEST, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 4, -7]), C.RarityTierToPoint.UNCOMMON, 50),
@@ -132,31 +142,31 @@ const CardDefCatalog = {
     BURGUNDY_WIZARD_ROBE_BOTTOM: new CardDef(C.EquipmentType.LEGS, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 7, -4]), C.RarityTierToPoint.RARE, 100),
     RED_WIZARD_ROBE_BOTTOM: new CardDef(C.EquipmentType.LEGS, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 11, -2]), C.RarityTierToPoint.MYTHICAL, 250),
     WHITE_WIZARD_ROBE_BOTTOM: new CardDef(C.EquipmentType.LEGS, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 17, -1]), C.RarityTierToPoint.ROYAL, 500),
-    BLUE_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([1, 0, -17]), C.RarityTierToPoint.COMMON, 5),
-    GREEN_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([2, 0, -11]), C.RarityTierToPoint.COMMON, 10),
-    PURPLE_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([4, 0, -7]), C.RarityTierToPoint.UNCOMMON, 25),
-    BURGUNDY_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([7, 0, -4]), C.RarityTierToPoint.RARE, 50),
-    RED_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([11, 0, -2]), C.RarityTierToPoint.MYTHICAL, 100),
-    WHITE_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([17, 0, -1]), C.RarityTierToPoint.ROYAL, 250),
-    BLUE_WIZARD_WAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([1, 0, -17]), C.RarityTierToPoint.COMMON, 10),
-    GREEN_WIZARD_WAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([2, 0, -11]), C.RarityTierToPoint.COMMON, 25),
-    PURPLE_WIZARD_WAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([4, 0, -7]), C.RarityTierToPoint.UNCOMMON, 50),
-    BURGUNDY_WIZARD_WAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([7, 0, -4]), C.RarityTierToPoint.RARE, 100),
-    RED_WIZARD_WAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([11, 0, -2]), C.RarityTierToPoint.MYTHICAL, 250),
-    WHITE_WIZARD_WAND: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([17, 0, -1]), C.RarityTierToPoint.ROYAL, 500),
-    BLUE_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 1, -17]), C.RarityTierToPoint.COMMON, 5),
-    GREEN_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 2, -11]), C.RarityTierToPoint.COMMON, 10),
-    PURPLE_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 4, -7]), C.RarityTierToPoint.UNCOMMON, 25),
-    BURGUNDY_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 7, -4]), C.RarityTierToPoint.RARE, 50),
-    RED_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 11, -2]), C.RarityTierToPoint.MYTHICAL, 100),
-    WHITE_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 17, -1]), C.RarityTierToPoint.ROYAL, 250),
+    BLUE_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([1, 0, -17]), C.RarityTierToPoint.COMMON, 10),
+    GREEN_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([2, 0, -11]), C.RarityTierToPoint.COMMON, 25),
+    PURPLE_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([4, 0, -7]), C.RarityTierToPoint.UNCOMMON, 50),
+    BURGUNDY_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([7, 0, -4]), C.RarityTierToPoint.RARE, 100),
+    RED_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([11, 0, -2]), C.RarityTierToPoint.MYTHICAL, 250),
+    WHITE_WIZARD_STAFF: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([17, 0, -1]), C.RarityTierToPoint.ROYAL, 500),
+    BLUE_WIZARD_WAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([1, 0, -17]), C.RarityTierToPoint.COMMON, 10),
+    GREEN_WIZARD_WAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([2, 0, -11]), C.RarityTierToPoint.COMMON, 25),
+    PURPLE_WIZARD_WAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([4, 0, -7]), C.RarityTierToPoint.UNCOMMON, 50),
+    BURGUNDY_WIZARD_WAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([7, 0, -4]), C.RarityTierToPoint.RARE, 100),
+    RED_WIZARD_WAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([11, 0, -2]), C.RarityTierToPoint.MYTHICAL, 250),
+    WHITE_WIZARD_WAND: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([17, 0, -1]), C.RarityTierToPoint.ROYAL, 500),
+    BLUE_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 1, -17]), C.RarityTierToPoint.COMMON, 10),
+    GREEN_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 2, -11]), C.RarityTierToPoint.COMMON, 25),
+    PURPLE_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 4, -7]), C.RarityTierToPoint.UNCOMMON, 50),
+    BURGUNDY_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 7, -4]), C.RarityTierToPoint.RARE, 100),
+    RED_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 11, -2]), C.RarityTierToPoint.MYTHICAL, 250),
+    WHITE_WIZARD_ORB: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.MAGIC, C.SubType.NONE, new Stats([0, 0, 0], [0, 17, -1]), C.RarityTierToPoint.ROYAL, 500),
 
-    COPPER_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-17, 0, 1]), C.RarityTierToPoint.COMMON, 5),
-    IRON_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-11, 0, 2]), C.RarityTierToPoint.COMMON, 10),
-    STEEL_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-7, 0, 4]), C.RarityTierToPoint.UNCOMMON, 25),
-    NELENITE_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-4, 0, 7]), C.RarityTierToPoint.RARE, 50),
-    GOTHITE_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-2, 0, 11]), C.RarityTierToPoint.MYTHICAL, 100),
-    OSMIUM_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-1, 0, 17]), C.RarityTierToPoint.ROYAL, 250),
+    COPPER_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-17, 0, 1]), C.RarityTierToPoint.COMMON, 10),
+    IRON_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-11, 0, 2]), C.RarityTierToPoint.COMMON, 25),
+    STEEL_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-7, 0, 4]), C.RarityTierToPoint.UNCOMMON, 50),
+    NELENITE_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-4, 0, 7]), C.RarityTierToPoint.RARE, 100),
+    GOTHITE_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-2, 0, 11]), C.RarityTierToPoint.MYTHICAL, 250),
+    OSMIUM_CHAIN_HELMET: new CardDef(C.EquipmentType.HELMET, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-1, 0, 17]), C.RarityTierToPoint.ROYAL, 500),
     COPPER_CHAINBODY: new CardDef(C.EquipmentType.CHEST, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-17, 0, 1]), C.RarityTierToPoint.COMMON, 10),
     IRON_CHAINBODY: new CardDef(C.EquipmentType.CHEST, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-11, 0, 2]), C.RarityTierToPoint.COMMON, 25),
     STEEL_CHAINBODY: new CardDef(C.EquipmentType.CHEST, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-7, 0, 4]), C.RarityTierToPoint.UNCOMMON, 50),
@@ -169,24 +179,24 @@ const CardDefCatalog = {
     NELENITE_CHAINLEGS: new CardDef(C.EquipmentType.LEGS, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-4, 0, 7]), C.RarityTierToPoint.RARE, 100),
     GOTHITE_CHAINLEGS: new CardDef(C.EquipmentType.LEGS, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-2, 0, 11]), C.RarityTierToPoint.MYTHICAL, 250),
     OSMIUM_CHAINLEGS: new CardDef(C.EquipmentType.LEGS, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-1, 0, 17]), C.RarityTierToPoint.ROYAL, 500),
-    COPPER_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-17, 1, 0]), C.RarityTierToPoint.COMMON, 5),
-    IRON_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-11, 2, 0]), C.RarityTierToPoint.COMMON, 10),
-    STEEL_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-7, 4, 0]), C.RarityTierToPoint.UNCOMMON, 25),
-    NELENITE_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-4, 7, 0]), C.RarityTierToPoint.RARE, 50),
-    GOTHITE_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-2, 11, 0]), C.RarityTierToPoint.MYTHICAL, 100),
-    OSMIUM_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-1, 17, 0]), C.RarityTierToPoint.ROYAL, 250),
-    COPPER_DARTS: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-17, 1, 0]), C.RarityTierToPoint.COMMON, 10),
-    IRON_DARTS: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-11, 2, 0]), C.RarityTierToPoint.COMMON, 25),
-    STEEL_DARTS: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-7, 4, 0]), C.RarityTierToPoint.UNCOMMON, 50),
-    NELENITE_DARTS: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-4, 7, 0]), C.RarityTierToPoint.RARE, 100),
-    GOTHITE_DARTS: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-2, 11, 0]), C.RarityTierToPoint.MYTHICAL, 250),
-    OSMIUM_DARTS: new CardDef(C.EquipmentType.WEAPON_OFFHAND, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-1, 17, 0]), C.RarityTierToPoint.ROYAL, 500),
-    COPPER_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-17, 0, 1]), C.RarityTierToPoint.COMMON, 5),
-    IRON_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-11, 0, 2]), C.RarityTierToPoint.COMMON, 10),
-    STEEL_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-7, 0, 4]), C.RarityTierToPoint.UNCOMMON, 25),
-    NELENITE_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-4, 0, 7]), C.RarityTierToPoint.RARE, 50),
-    GOTHITE_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-2, 0, 11]), C.RarityTierToPoint.MYTHICAL, 100),
-    OSMIUM_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-1, 0, 17]), C.RarityTierToPoint.ROYAL, 250),
+    COPPER_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-17, 1, 0]), C.RarityTierToPoint.COMMON, 10),
+    IRON_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-11, 2, 0]), C.RarityTierToPoint.COMMON, 25),
+    STEEL_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-7, 4, 0]), C.RarityTierToPoint.UNCOMMON, 50),
+    NELENITE_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-4, 7, 0]), C.RarityTierToPoint.RARE, 100),
+    GOTHITE_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-2, 11, 0]), C.RarityTierToPoint.MYTHICAL, 250),
+    OSMIUM_CROSSBOW: new CardDef(C.EquipmentType.WEAPON, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-1, 17, 0]), C.RarityTierToPoint.ROYAL, 500),
+    COPPER_DARTS: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-17, 1, 0]), C.RarityTierToPoint.COMMON, 10),
+    IRON_DARTS: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-11, 2, 0]), C.RarityTierToPoint.COMMON, 25),
+    STEEL_DARTS: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-7, 4, 0]), C.RarityTierToPoint.UNCOMMON, 50),
+    NELENITE_DARTS: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-4, 7, 0]), C.RarityTierToPoint.RARE, 100),
+    GOTHITE_DARTS: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-2, 11, 0]), C.RarityTierToPoint.MYTHICAL, 250),
+    OSMIUM_DARTS: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([-1, 17, 0]), C.RarityTierToPoint.ROYAL, 500),
+    COPPER_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-17, 0, 1]), C.RarityTierToPoint.COMMON, 10),
+    IRON_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-11, 0, 2]), C.RarityTierToPoint.COMMON, 25),
+    STEEL_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-7, 0, 4]), C.RarityTierToPoint.UNCOMMON, 50),
+    NELENITE_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-4, 0, 7]), C.RarityTierToPoint.RARE, 100),
+    GOTHITE_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-2, 0, 11]), C.RarityTierToPoint.MYTHICAL, 250),
+    OSMIUM_ROUNDSHIELD: new CardDef(C.EquipmentType.SHIELD, C.EquipmentClass.RANGED, C.SubType.NONE, new Stats([0, 0, 0], [-1, 0, 17]), C.RarityTierToPoint.ROYAL, 500),
 
     AMULET_OF_FOCUS: new CardDef(C.EquipmentType.AMULET, C.EquipmentClass.ALL, C.SubType.FOCUS, new Stats([1, 1, 1]), C.RarityTierToPoint.UNCOMMON, 100),
     AMULET_OF_POWER: new CardDef(C.EquipmentType.AMULET, C.EquipmentClass.ALL, C.SubType.POWER, new Stats([3, 0, -1], [1, 0, 0]), C.RarityTierToPoint.UNCOMMON, 100),
