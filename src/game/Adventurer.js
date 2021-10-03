@@ -1,4 +1,5 @@
 import Stats from "./Stats";
+import { EquipmentClass } from "./Constants";
 
 export default class Adventurer {
     constructor() {
@@ -12,6 +13,22 @@ export default class Adventurer {
             AMULET: null,
         };
         this.attackClass = EquipmentClass.MELEE;
+    }
+
+    getCardsUsed() {
+        let cards = {}; //id: amount
+        let cardSlotKeys = Object.keys(this.cardSlots);
+        for (let i = 0; i < cardSlotKeys.length; ++i) {
+            let card = this.cardSlots[cardSlotKeys[i]];
+            if (card == null) {
+                continue;
+            }
+            if (!cards[card.cardID]) {
+                cards[card.cardID] = 0;
+            }
+            cards[card.cardID] += 1;
+        }
+        return cards;
     }
 
     // Returns damage applied
@@ -37,7 +54,7 @@ export default class Adventurer {
         }
 
         this.cardSlots[card.equipmentType] = card;
-        this.stats = Stats.combine(this.stats, card.stats);
+        this.stats = Stats.combine(this.stats, card.totalStats);
     }
 
     removeCard(equipmentType) {
@@ -46,7 +63,7 @@ export default class Adventurer {
             return;
         }
 
-        this.stats = Stats.subtract(this.stats, card.stats);
+        this.stats = Stats.subtract(this.stats, card.totalStats);
         this.cardSlots[card.equipmentType] = null;
     }
 }

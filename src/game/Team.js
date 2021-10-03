@@ -1,8 +1,24 @@
-const { Adventurer } = require("./Adventurer");
+import Adventurer from "./Adventurer";
 
 export default class Team {
-    constructor() {
+    constructor(accountName) {
+        this.accountName = accountName;
         this.adventurers = [new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer()];
+    }
+
+    getCardsUsed() {
+        let cards = {}; //id: amount
+        for (let i = 0; i < this.adventurers.length; ++i) {
+            let advCards = this.adventurers[i].getCardsUsed();
+            let advCardKeys = Object.keys(advCards);
+            for (let i = 0; i < advCardKeys.length; ++i) {
+                if (!cards[advCardKeys[i]]) {
+                    cards[advCardKeys[i]] = 0;
+                }
+                cards[advCardKeys[i]] += advCards[advCardKeys[i]];
+            }
+        }
+        return cards;
     }
 
     applyDamage(advID, damage) {
@@ -22,5 +38,3 @@ export default class Team {
         return this.adventurers.length > 0;
     }
 }
-
-//module.exports.Team = Team;

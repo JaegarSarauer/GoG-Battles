@@ -42,7 +42,7 @@ class CardDef {
         }
     }
 
-    createValidCardsFromDef() {
+    createValidCardsFromDef(cardName) {
         let cards = [];
         for (let i = 0; i < this.modifierRollTable.modifierArray.length; ++i) {
             let modifierID = this.modifierRollTable.modifierArray[i];
@@ -54,7 +54,7 @@ class CardDef {
                 if (this.GOGTokenBaseValue < smallestTokenValue) {
                     smallestTokenValue = this.GOGTokenBaseValue;
                 }
-                let card = new Card(this.equipmentType, this.equipmentClass, this.subType, this.baseStats, rarityTier, modifierData, this.GOGTokenBaseValue);
+                let card = new Card(cardName, this.equipmentType, this.equipmentClass, this.subType, this.baseStats, rarityTier, modifierData, this.GOGTokenBaseValue);
                 cards.push(card);
             }
         }
@@ -65,7 +65,8 @@ class CardDef {
 var cardIDCounter = 0;
 
 class Card {
-    constructor(equipmentType, equipmentClass, subType, baseStats, rarityTier, modifer, GOGTokenValue) {
+    constructor(cardName, equipmentType, equipmentClass, subType, baseStats, rarityTier, modifer, GOGTokenValue) {
+        this.name = cardName;
         this.cardID = cardIDCounter++;
         this.equipmentType = equipmentType;
         this.equipmentClass = equipmentClass;
@@ -225,7 +226,7 @@ export const CardCatalog = [
 const BuildCardCatalog = () => {
     let cardDefKeys = Object.keys(CardDefCatalog);
     for (let i = 0; i < cardDefKeys.length; ++i) {
-        let validCardsFromDef = CardDefCatalog[cardDefKeys[i]].createValidCardsFromDef();
+        let validCardsFromDef = CardDefCatalog[cardDefKeys[i]].createValidCardsFromDef(cardDefKeys[i]);
         for (let c = 0; c < validCardsFromDef.length; ++c) {
             CardCatalog.push(validCardsFromDef[c]);
         }

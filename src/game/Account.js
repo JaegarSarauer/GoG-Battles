@@ -1,10 +1,21 @@
 export default class Account {
     constructor(accountID) {
         this.accountID = accountID;
-        this.cards = {}; //id, amount
+        this.cards = {}; //id: amount
         this.GAMEToken = 0;
         this.USDC = 0;
         this.USDCInSystem = 0;
+    }
+
+    //cards is obj of id: amount
+    checkHasCards(cards) {
+        let cardKeys = Object.keys(cards);
+        for (let i = 0; i < cardKeys.length; i++) {
+            if (this.cards[cardKeys[i]].amount < cards[cardKeys[i]]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     addUSDC(usdc) {

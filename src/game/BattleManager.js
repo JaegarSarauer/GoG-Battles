@@ -6,18 +6,58 @@ import {CardCatalog, GetSmallestCardTokenValue} from './Card';
 
 class BattleManager {
     constructor() {
+        this.battleIDCounter = 0;
+
         this.battleQueue = [];
+        this.battles = {};
     }
 
-    createBattle(team1, team2) {
+    joinBattleQueue(team) {
+        for (let i = 0; i < this.battleQueue.length; ++i) {
+            if (this.battleQueue[i].accountName == team.accountName) {
+                console.error('you are already in battle queue')
+                return;
+            }
+        }
+        this.battleQueue.push(team);
+        this.tryCreateBattle();
+    }
+
+    tryCreateBattle() {
+        if (this.battleQueue.length >= 2) {
+            let team1 = this.battleQueue.shift();
+            let team2 = null;
+            for (let i = 0; i < this.battleQueue.length; ++i) {
+                if (this.battleQueue[i].accountName != team1.accountName) {
+                    team2 = this.battleQueue[i];
+                    break;
+                }
+            }
+            if (team1 != null && team2 != null) {
+                let battle = new Battle(this.battleIDCounter++, team1, team2);
+                this.battles[battle.battleID] = battle;
+            }
+        }
+    }
+
+    completeBattle(battleID) {
 
     }
 
+    validateBattle() {
 
+    }
+}
+
+class BattleLog {
+    constructor() {
+
+    }
 }
 
 class Battle {
-    constructor(team1, team2) {
+    constructor(battleID, team1, team2) {
+        this.battleID = battleID;
         this.team1 = team1;
         this.team2 = team2;
 
@@ -38,14 +78,51 @@ class Battle {
     }
 }
 
-const BattleTurn = (adv0Target = null, adv1Target = null, adv2Target = null, adv3Target = null, adv4Target = null, adv5Target = null) => {
-    return {
-        0: adv0Target,
-        1: adv1Target,
-        2: adv2Target,
-        3: adv3Target,
-        4: adv4Target,
-    };
+const BattleMove = {
+    ATTACK: 'ATTACK',
+    DEFEND: 'DEFEND',
+    SUPPORT: 'SUPPORT'
+};
+
+const BattleMoveToData = {
+    ATTACK: 0,
+    DEFEND: 1,
+    SUPPORT: 2,
+};
+
+const DataToBattleMove = {
+    0: BattleMove.ATTACK,
+    1: BattleMove.DEFEND,
+    2: BattleMove.SUPPORT
+};
+
+class BattleTurn {
+    constructor() {
+        this.advMoves = [];
+    }    
+
+    setMove(advID, move) {
+
+    }
+
+    toData() {
+        let data = {};
+        for (let i = 0; i < 5; ++i) {
+            if (this.advMoves[i] == null) {
+                continue;
+            }
+            data[i] = BattleMoveToData[this.advMoves[i]];
+        }
+        return data;
+    }
+
+    fromData(data) {
+        let advIDs = Object.keys(this.advMoves);
+        for (let i = 0; i < advIDs.length; ++i) {
+            let advID = advIDs[i];
+            this.advMoves[advID] = DataToBattleMove[data[advID]];
+        }
+    }
 }
 
 // players setup their adventurers and their cards
