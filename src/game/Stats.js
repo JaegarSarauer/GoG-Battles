@@ -1,8 +1,21 @@
+import { EquipmentClass } from "./Constants";
+
 export default class Stats {
     constructor(offenseStats = [0, 0, 0], defenseStats = [0, 0, 0], hp = 0) {
         this.offense = offenseStats;
         this.defense = defenseStats;
         this.hp = hp;
+    }
+
+    getAttackClass() {
+        let atkClass = EquipmentClass.MELEE;
+        if (this.offense[0] < this.offense[1]) {
+            atkClass = EquipmentClass.MAGIC;
+        }
+        if (Math.max(this.offense[0], this.offense[1]) < this.offense[2]) {
+            atkClass = EquipmentClass.RANGED;
+        }
+        return atkClass;
     }
 
     static multiply(stats, modifierQuality) {

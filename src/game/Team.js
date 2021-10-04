@@ -1,9 +1,37 @@
 import Adventurer from "./Adventurer";
+import { BattleTurn } from "./BattleManager";
+import { CardCatalog } from "./Card";
 
 export default class Team {
     constructor(accountName) {
         this.accountName = accountName;
         this.adventurers = [new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer()];
+        this.battleTurn = BattleTurn.default();
+    }
+
+    toData() {
+        return {
+            accountName: this.accountName,
+
+        };
+    }
+
+    setBattleTurn(battleTurn) {
+        this.battleTurn = battleTurn;
+    }
+
+    /*
+    [[adv1: cardIDs], [adv2: cardIDs], ...]
+    */
+    setCards(arrayOfAdvCards) {
+        for (let a = 0; a < arrayOfAdvCards.length; ++a) {
+            for (let i = 0; i < arrayOfAdvCards[a].length; ++i) {
+                let card = CardCatalog[arrayOfAdvCards[a][i]];
+                if (card) {
+                    this.adventurers[advID].applyCard(card);
+                }
+            }
+        }
     }
 
     getCardsUsed() {
@@ -19,6 +47,16 @@ export default class Team {
             }
         }
         return cards;
+    }
+
+    getCardCountUsed() {
+        let cards = this.getCardsUsed();
+        let cardKeys = Object.keys(cards);
+        let count = 0;
+        for (let i = 0; i < cardKeys.length; ++i) {
+            count += cards[cardKeys];
+        }
+        return count;
     }
 
     applyDamage(advID, damage) {

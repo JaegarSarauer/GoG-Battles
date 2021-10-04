@@ -1,9 +1,9 @@
 import Stats from "./Stats";
-import { EquipmentClass } from "./Constants";
+import { EquipmentClassToIndex } from "./Constants";
 
 export default class Adventurer {
     constructor() {
-        this.stats = new Stats();
+        this.stats = new Stats([0,0,0],[0,0,0],100);
         this.cardSlots = {
             HELMET: null,
             CHEST: null,
@@ -12,7 +12,6 @@ export default class Adventurer {
             SHIELD: null,
             AMULET: null,
         };
-        this.attackClass = EquipmentClass.MELEE;
     }
 
     getCardsUsed() {
@@ -33,11 +32,25 @@ export default class Adventurer {
 
     // Returns damage applied
     damage(damage) {
-        this.stats.hp = Math.max(0, this.stats.hp - Math.max(0, damage));
+        this.stats.hp = Math.max(0, this.stats.hp - Math.max(0, Math.floor(damage)));
+    }
+
+    attack(attackerStats) {
+        let atkStyle = attackerStats.getAttackClass();
+        let atkPoints = attackerStats.offense[EquipmentClassToIndex[atkStyle]];
+        let defPoints = this.stats.defense[EquipmentClassToIndex[atkStyle]];
+        let pointsDifference = atkPoints - defPoints;
+        let dmgAmount = 0;
+        if (pointsDifference > 0) {
+            dmgAmount = Math.round(5 + Math.pow(pointsDifference, 1.24));
+        } else if (pointsDifference <= 0) {
+            dmgAmount = Math.ceil(Math.max(1, 5 + pointsDifference));
+        }
+        this.damage(dmgAmount);
     }
 
     heal(healHP) {
-        this.stats.hp += Math.max(0, healHP);
+        this.stats.hp += Math.max(0, Math.ceil(healHP));
     }
 
     isDead() {

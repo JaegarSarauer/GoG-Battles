@@ -158,3 +158,33 @@ export const Modifiers = {
         stats: new Stats([1, 1, 1], [1, 1, 1])
     },
 };
+
+export const BattleMove = {
+    ATTACK_ADV0: 'ATTACK_ADV0',
+    ATTACK_ADV1: 'ATTACK_ADV1',
+    ATTACK_ADV2: 'ATTACK_ADV2',
+    ATTACK_ADV3: 'ATTACK_ADV3',
+    ATTACK_ADV4: 'ATTACK_ADV4',
+    ATTACK_WEAKEST: 'ATTACK_WEAKEST',
+    ATTACK_STRONGEST: 'ATTACK_STRONGEST'
+};
+
+export const BattleMoveToData = {
+    ATTACK_ADV0: 0,
+    ATTACK_ADV1: 1,
+    ATTACK_ADV2: 2,
+    ATTACK_ADV3: 3,
+    ATTACK_ADV4: 4,
+    ATTACK_WEAKEST: 5,
+    ATTACK_STRONGEST: 6
+};
+
+export const DataToBattleMove = {
+    0: BattleMove.ATTACK_ADV0,
+    1: BattleMove.ATTACK_ADV1,
+    2: BattleMove.ATTACK_ADV2,
+    3: BattleMove.ATTACK_ADV3,
+    4: BattleMove.ATTACK_ADV4,
+    5: BattleMove.ATTACK_WEAKEST,
+    6: BattleMove.ATTACK_STRONGEST
+};

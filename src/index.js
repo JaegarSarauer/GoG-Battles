@@ -4,7 +4,7 @@ import USDCContract from './game/USDCContract';
 import CardGeneratorTester from './CardGeneratorTester';
 import battleManagerInstance from './game/BattleManager';
 import Team from './game/Team';
-import { EquipmentType } from './game/Constants';
+import { BattleMoveToData, DataToBattleMove, EquipmentType } from './game/Constants';
 
 class Controller {
     constructor() {
@@ -35,6 +35,46 @@ class BattleManagerController extends Controller {
 
     render() {
         return this.container;
+    }
+}
+
+class Dropdown extends Controller {
+    constructor(dropdownTitle) {
+        super();
+        this.dropdown = document.createElement('select');
+        this.dropdown.name = dropdownTitle;
+        this.changeCallback = () => {};
+        this.dropdown.onchange = () => {
+            this.changeCallback(this.getSelectedID());
+        };
+    }
+
+    setSelectedID(id) {
+        this.dropdown.selectedIndex = (id % this.dropdown.length);
+    }
+
+    addItems(arrayOfItems) {
+        for (let i = 0; i < arrayOfItems.length; ++i) {
+            this.addItem(i, arrayOfItems[i]);
+        }
+    }
+
+    addItem(id, text) {
+        let option = document.createElement('option');
+        option.id = id;
+        option.text = text;
+        this.dropdown.add(option);
+    }
+
+    getSelectedID() {
+        if (this.dropdown.selectedOptions[0] == null || this.dropdown.selectedOptions[0].id == null) {
+            return -1;
+        }
+        return this.dropdown.selectedOptions[0].id;
+    }
+
+    render() {
+        return this.dropdown;
     }
 }
 
@@ -77,7 +117,7 @@ class DropdownFactory extends Controller {
 }
 
 class AdventurerController extends Controller {
-    constructor(advID, adventurer, cards) {
+    constructor(team, advID, adventurer, cards) {
         super();
 
         this.adventurer = adventurer;
@@ -96,6 +136,14 @@ class AdventurerController extends Controller {
         this.weaponSlot = new DropdownFactory('Weapon Slot', EquipmentType.WEAPON, cards);
         this.shieldSlot = new DropdownFactory('Shield Slot', EquipmentType.SHIELD, cards);
         this.amuletSlot = new DropdownFactory('Amulet Slot', EquipmentType.AMULET, cards);
+        this.turnMove = new Dropdown('Turn Move');
+        this.turnMove.addItems(Object.values(DataToBattleMove));
+        this.turnMove.setSelectedID(BattleMoveToData[team.battleTurn.advMoves[advID]]);
+        this.turnMove.changeCallback = (id) => {
+            if (id >= 0) {
+                team.battleTurn.setMove(advID, DataToBattleMove[id]);
+            }
+        };
 
         this.container.appendChild(this.headSlot.dropdown);
         this.container.appendChild(this.chestSlot.dropdown);
@@ -103,6 +151,15 @@ class AdventurerController extends Controller {
         this.container.appendChild(this.weaponSlot.dropdown);
         this.container.appendChild(this.shieldSlot.dropdown);
         this.container.appendChild(this.amuletSlot.dropdown);
+        this.container.appendChild(this.turnMove.dropdown);
+
+        this.hpLabel = document.createElement('div');
+        this.hpLabel.innerText = 'HP: ' + adventurer.stats.hp;
+        this.container.appendChild(this.hpLabel);
+
+        setInterval(() => {
+            this.hpLabel.innerText = 'HP: ' + adventurer.stats.hp;
+        }, 100);
     }
 
     assignCards() {
@@ -153,7 +210,7 @@ class TeamController extends Controller {
 
         this.advControllers = [];
         for (let i = 0; i < 5; ++i) {
-            this.advControllers.push(new AdventurerController(i, this.team.adventurers[i], this.cards));
+            this.advControllers.push(new AdventurerController(this.team, i, this.team.adventurers[i], this.cards));
             this.container.appendChild(this.advControllers[i].render());
         }
     }
@@ -215,7 +272,7 @@ class AccountController extends Controller {
         // };
         // this.container.appendChild(this.withdrawUSDC);
 
-        this.playerTeam = new Team();
+        this.playerTeam = new Team(this.account.accountID);
 
         this.teamController = new TeamController(this.account.cards, this.playerTeam);
         this.container.appendChild(this.teamController.render());
@@ -233,7 +290,7 @@ class AccountController extends Controller {
         if (this.account.checkHasCards(this.playerTeam.getCardsUsed())) {
             battleManagerInstance.joinBattleQueue(this.playerTeam);
         } else {
-            window.alert('team does not have valid cards')
+            window.alert('team does not have valid cards');
         }
     }
 
