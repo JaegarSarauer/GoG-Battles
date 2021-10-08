@@ -1,4 +1,4 @@
-import { EquipmentClass } from "./Constants";
+import { EquipmentClass } from "./Constants.js";
 
 export default class Stats {
     constructor(offenseStats = [0, 0, 0], defenseStats = [0, 0, 0], hp = 0) {

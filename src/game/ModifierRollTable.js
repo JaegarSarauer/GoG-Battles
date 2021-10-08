@@ -1,4 +1,4 @@
-import * as C from './Constants';
+import * as C from './Constants.js';
 
 /*
 Array of [ModifierID]

@@ -1,5 +1,8 @@
-import {CardCatalog, GetSmallestCardTokenValue} from './Card';
-import { BattleMove } from './Constants';
+import {CardCatalog, GetSmallestCardTokenValue} from './Card.js';
+import { BattleLogMessageDef, BattleLogMessageType, BattleMove } from './Constants.js';
+import { PubSub } from './PubSub.js';
+import Team from './Team.js';
+import web3ManagerInstance from './Web3Manager.js';
 /*
 
 
@@ -17,11 +20,17 @@ class BattleManager {
         for (let i = 0; i < this.battleQueue.length; ++i) {
             if (this.battleQueue[i].accountName == team.accountName) {
                 console.error('you are already in battle queue');
-                return;
+                return null;
             }
         }
         this.battleQueue.push(team);
-        this.tryCreateBattle();
+        return this.tryCreateBattle();
+    }
+
+    createBattleFromBattleLog() {
+        //verify battle joined here
+        let battle = new Battle(this.battleIDCounter++, team1, team2);
+        this.battles[battle.battleID] = battle;
     }
 
     tryCreateBattle() {
@@ -35,8 +44,7 @@ class BattleManager {
                 }
             }
             if (team1 != null && team2 != null) {
-                let battle = new Battle(this.battleIDCounter++, team1, team2);
-                this.battles[battle.battleID] = battle;
+                //return a request for team2 to sign the battle creation
             }
         }
     }
@@ -50,29 +58,235 @@ class BattleManager {
     }
 }
 
-class BattleLog {
-    constructor() {
-        this.setupLogs = [];
-        this.battleLogs = [];
-        this.resultLogs = [];
+export class BattleLogSimulator {
+    constructor(battleLog) {
+        this.battleLog = battleLog;
+        this.battleTurn = 0;
+        this.team1 = null;
+        this.team2 = null;
+        this.battle = null;
     }
 
-    logBattleSetup() {
-        let log = {
-
-        };
-        this.setupLogs.push();
+    validateExpectedAddress(turn) {
+        let logAtTurn = this.battleLog.getBattleLog(turn);
+        let verify = web3ManagerInstance.verifyBattleLog(logAtTurn);
+        let addressCorrect = logAtTurn.address == (turn % 2 == 0 ? this.team1.address : this.team2.address);
+        return verify && addressCorrect;
     }
 
-    logBattleTurn() {
-
+    getTeamFromAddress(address) {
+        return this.team1.address == address ? this.team1 : this.team2;
     }
 
-    logBattleResult() {
+    verifyBattleCards() {
+        let log = this.battleLog.getBattleLog(this.battleTurn);
 
+        let team = this.getTeamFromAddress(log.address);
+        team.setCards(log.data.advCards);
+
+        return true;
+    }
+
+    verifyBattleTurnChanged() {
+        let log = this.battleLog.getBattleLog(this.battleTurn);
+
+        let team = this.getTeamFromAddress(log.address);
+        team.battleTurn.setMoves(log.data.battleTurn);
+
+        return true;
+    }
+
+    verifyCreateBattle() {
+        let log0 = this.battleLog.getBattleLog(this.battleTurn);
+        if (this.battleTurn != 0) {
+            return false;
+        }
+        if (log0.data.player1Address != log0.address) {
+            return false;
+        }
+        if (this.team1 != null) {
+            return false;
+        }
+        if (log0.battleLogMessageType != BattleLogMessageType.CREATE_BATTLE) {
+            return false;
+        }
+
+        this.team1 = new Team(log0.address);
+    }
+
+    verifyJoinBattle() {
+        let log1 = this.battleLog.getBattleLog(1);
+        if (this.battleTurn != 1) {
+            return false;
+        }
+        if (log1.data.player2Address != log1.address) {
+            return false;
+        }
+        if (this.team2 != null) {
+            return false;
+        }
+        if (log1.battleLogMessageType != BattleLogMessageType.JOIN_BATTLE) {
+            return false;
+        }
+
+        this.team2 = new Team(log1.address);
+    }
+
+    _simulateTurn(battleLogMessageType, data) {
+        switch(battleLogMessageType) {
+            case BattleLogMessageType.CREATE_BATTLE:
+                return this.verifyJoinBattle();
+            case BattleLogMessageType.JOIN_BATTLE:
+                return this.verifyJoinBattle();
+            case BattleLogMessageType.CHANGE_BATTLE_TURN:
+                return this.verifyBattleTurnChanged();
+            case BattleLogMessageType.SET_CARDS:
+                return this.verifyBattleCards();
+            case BattleLogMessageType.CLAIM_WIN:
+                return this.verifyClaimWin();
+        }
+    }
+
+    simulate() {
+        while (this.battleTurn < battleLog.logs.length) {
+            let log = this.battleLog.getBattleLog(this.battleTurn);
+            if (!this.validateExpectedAddress(this.battleLog)) {
+                return false;
+            }
+            if (!this._simulateTurn(log.data)) {
+                return false;
+            }
+            this.battleTurn++;
+        }
+    }
+
+
+}
+
+class BattleLogMessage {
+    constructor(battleLogMessageType, data, signature, address) {
+        this.battleLogMessageType = battleLogMessageType;
+        this.data = data;
+        this.signature = signature;
+        this.address = address;
+    }
+
+    validate() {
+        let def = BattleLogMessageDef[this.battleLogMessageType];
+        if (def == null) {
+            return false;
+        }
+
+        let defKeys = Object.keys(def);
+        for (let i = 0; i < defKeys.length; ++i) {
+            if (data[defKeys[i]] == null) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
+export class BattleLog extends PubSub {
+    constructor() {
+        super();
+        this.messages = [];
+        this.needsSignature = false;
+        this.address = null;
+        this.signature = null;
+        this.listeners = [];
+    }
+
+    unsubscribeFromBattle(battle) {
+        for (let i = 0; i < this.listeners.length; ++i) {
+            let listenerData = this.listeners[i];
+            battle.unsub(listenerData.key, listenerData.listenerID);
+        }
+    }
+
+    subscribeToBattle(battle) {
+        let listenerID = -1;
+        listenerID = battle.subscribe('moveResult', (data) => {
+            let player1Moves = data.player1Moves;
+            let player2Moves = data.player2Moves;
+            this.createLog(BattleLogMessageType.MOVE_RESULT, {
+                player1Moves, player2Moves, 
+            });
+        });
+        this.listeners.push({key: 'moveResult', listenerID});
+
+        listenerID = battle.subscribe('completeBattle', (data) => {
+            let winnerAddress = data.winnerAddress;
+            this.createLog(BattleLogMessageType.CLAIM_WIN, {
+                winnerAddress, 
+            });
+        });
+        this.listeners.push({key: 'completeBattle', listenerID});
+
+        listenerID = battle.subscribe('setBattleTurn', (data) => {
+            let teamID = data.teamID;
+            let battleTurn = data.battleTurn;
+            this.createLog(BattleLogMessageType.CHANGE_BATTLE_TURN, {
+                teamID, battleTurn, 
+            });
+        });
+        this.listeners.push({key: 'setBattleTurn', listenerID});
+
+        listenerID = battle.subscribe('setCards', (data) => {
+            let teamID = data.teamID;
+            let arrayOfAdvCards = data.arrayOfAdvCards;
+            this.createLog(BattleLogMessageType.SET_CARDS, {
+                teamID, arrayOfAdvCards, 
+            });
+        });
+        this.listeners.push({key: 'setCards', listenerID});
+    }
+
+    createLog(battleLogMessageType, data) {
+        let battleLogMessage = new BattleLogMessage(battleLogMessageType, data);
+        if (!battleLogMessage.validate()) {
+            return false;
+        }
+        // Already unsigned, sign the first message first.
+        if (this.needsSignature) {
+            return false;
+        }
+        if (this.address != null && this.signature != null) {
+            this.messages[this.messages.length - 1].address = this.address;
+            this.messages[this.messages.length - 1].signature = this.signature;
+            this.address = null;
+            this.signature = null;
+        }
+        this.needsSignature = true;
+        this.messages.push(battleLogMessage);
+        this.publish('needsSignature', true);
+    }
+
+    signLog(address, signature) {
+        if (!this.needsSignature) {
+            return false;
+        }
+        this.address = address;
+        this.signature = signature;
+        return true;
+    }
+
+    getLastMessage() {
+        return this.messages[this.messages.length - 1];
+    }
+
+    getBattleLog(logIndex = this.logs.length) {
+        let battleLog = new BattleLog();
+        let logs = this.logs.slice(0, Math.max(0, Math.min(logIndex, this.logs.length)));
+        battleLog.logs = logs;
+        battleLog.address = logs[logs.length-1].address;
+        battleLog.signature = logs[logs.length-1].signature;
+        battleLog.logs[logs.length-1].address = null;
+        battleLog.logs[logs.length-1].signature = null;
+        return battleLog;
+    }
+}
 
 /*
 Players join battle queue until two unique teams are in queue
@@ -81,8 +295,9 @@ battle starts:
         you can make changes to your team gear
         you setup your default attack move stances
 */
-class Battle {
+class Battle extends PubSub {
     constructor(battleID, team1, team2) {
+        super();
         this.battleID = battleID;
         this.team1 = team1;
         this.team2 = team2;
@@ -91,11 +306,11 @@ class Battle {
 
         this.turn = 0;
         this.battleStartTimestamp = new Date().getTime();
-        this.battleInterval = setInterval(() => {
-            this.runTeamTurns();
-        }, 5000);
-
-        this.log = new BattleLog();
+        // this.battleInterval = setInterval(() => {
+        //     this.runTeamTurns();
+        // }, 5000);
+        this.battleLog = new BattleLog();
+        this.subscribeToBattle(this);
     }
 
     _getTeam(teamID) {
@@ -110,16 +325,29 @@ class Battle {
 
         let team = this._getTeam(teamID);
         team.setCards(arrayOfAdvCards);
+        this.publish('setCards', {
+            teamID, arrayOfAdvCards
+        });
     }
 
     setBattleTurn(teamID, battleTurn) {
         let team = this._getTeam(teamID);
         team.setBattleTurn(battleTurn);
+        this.publish('setBattleTurn', {
+            teamID, battleTurn
+        });
     }
 
-    completeBattle() {
-        clearInterval(this.battleInterval);
+    startBattle() {
+        let team1CardCount = this._getTeam(0).getCardCountUsed();
+        let team2CardCount = this._getTeam(1).getCardCountUsed();
+        this.teamTurn = (team1CardCount < team2CardCount) ? 0 : 1;
+    }
 
+    completeBattle(winnerAddress) {
+        this.publish('completeBattle', {
+            winnerAddress,
+        });
     }
 
     checkBattleWin() {
@@ -138,16 +366,16 @@ class Battle {
         }
 
         if (!team2Alive) { // Team 2 is dead, team 1 win
-
+            this.completeBattle(this.team1.address);
         } else if (!team1Alive) { // Team 1 is dead, team 2 win
-
+            this.completeBattle(this.team2.address);
         }
     }
 
     runTeamTurns() {
-        let team1CardCount = this._getTeam(0).getCardCountUsed();
-        let team2CardCount = this._getTeam(1).getCardCountUsed();
-        this.teamTurn = (team1CardCount < team2CardCount) ? 0 : 1;
+        this.teamTurn = Math.abs(this.teamTurn - 1);
+        this.team1.moveResult.reset();
+        this.team2.moveResult.reset();
 
         let teamFirst = this._getTeam(this.teamTurn);
         let teamSecond = this._getTeam(Math.abs(this.teamTurn - 1));
@@ -157,6 +385,11 @@ class Battle {
             while (++teamFirstMoveID < 5 && !this.runMove(teamFirstMoveID, teamFirst, teamSecond)) {}
             while (++teamSecondMoveID < 5 && !this.runMove(teamSecondMoveID, teamSecond, teamFirst)) {}
         }
+
+        this.publish('moveResult', {
+            player1Moves: this.team1.moveResult.moves,
+            player2Moves: this.team2.moveResult.moves,
+        });
 
         ++this.turn;
     }
@@ -235,44 +468,11 @@ class Battle {
 
         if (validDefenderFound) {
             console.info(defendingTeam.adventurers[defenderAdvID], defenderAdvID, attackingTeam.adventurers[atkAdvID], atkAdvID)
-            defendingTeam.adventurers[defenderAdvID].attack(attackingTeam.adventurers[atkAdvID].stats);
+            let damageDealt = defendingTeam.adventurers[defenderAdvID].attack(attackingTeam.adventurers[atkAdvID].stats);
+            attackingTeam.moveResult.setMoveResult(atkAdvID, defenderAdvID, damageDealt, defendingTeam.adventurers[defenderAdvID].isDead());
             return true;
         } else {
             return false;
-        }
-    }
-}
-
-export class BattleTurn {
-    constructor() {
-        this.advOrder = [0, 1, 2, 3, 4];
-        this.advMoves = [BattleMove.ATTACK_ADV0, BattleMove.ATTACK_ADV1, BattleMove.ATTACK_ADV2, BattleMove.ATTACK_ADV3, BattleMove.ATTACK_ADV4];
-    }    
-
-    static default() {
-        return new BattleTurn();
-    }
-
-    setMove(advID, move) {
-        this.advMoves[advID] = move;
-    }
-
-    toData() {
-        let data = {};
-        for (let i = 0; i < 5; ++i) {
-            if (this.advMoves[i] == null) {
-                continue;
-            }
-            data[i] = BattleMoveToData[this.advMoves[i]];
-        }
-        return data;
-    }
-
-    fromData(data) {
-        let advIDs = Object.keys(this.advMoves);
-        for (let i = 0; i < advIDs.length; ++i) {
-            let advID = advIDs[i];
-            this.advMoves[advID] = DataToBattleMove[data[advID]];
         }
     }
 }

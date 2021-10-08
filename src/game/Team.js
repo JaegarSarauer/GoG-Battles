@@ -1,12 +1,14 @@
-import Adventurer from "./Adventurer";
-import { BattleTurn } from "./BattleManager";
-import { CardCatalog } from "./Card";
+import Adventurer from "./Adventurer.js";
+import { BattleTurn } from "./BattleTurn.js";
+import { CardCatalog } from "./Card.js";
+import { MoveResult } from "./MoveResult.js";
 
 export default class Team {
     constructor(accountName) {
         this.accountName = accountName;
         this.adventurers = [new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer()];
         this.battleTurn = BattleTurn.default();
+        this.moveResult = new MoveResult();
     }
 
     toData() {
@@ -32,6 +34,14 @@ export default class Team {
                 }
             }
         }
+    }
+
+    getArrayOfAdvCards() {
+        let cards = [];
+        for (let a = 0; a < 5; ++a) {
+            cards.push(Object.values(this.adventurers[a].getCardsUsed()));
+        }
+        return cards;
     }
 
     getCardsUsed() {

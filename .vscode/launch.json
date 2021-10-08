@@ -16,5 +16,29 @@
             "port": 8080,
             "sourceMaps": true
         },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Client Dev-Server",
+            "cwd": "${workspaceFolder}",
+            "runtimeArgs": ["run", "dev-server"],
+            "args": [], 
+            "runtimeExecutable": "npm",
+            "address": "[::1]",
+            "port": 8080,
+            "sourceMaps": true
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Client Dev-Http",
+            "cwd": "${workspaceFolder}",
+            "runtimeArgs": ["run", "dev-http"],
+            "args": [], 
+            "runtimeExecutable": "npm",
+            "address": "[::1]",
+            "port": 8080,
+            "sourceMaps": true
+        },
     ]
 }

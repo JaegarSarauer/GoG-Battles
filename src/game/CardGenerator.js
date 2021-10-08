@@ -1,4 +1,4 @@
-import {CardCatalog, GetSmallestCardTokenValue} from './Card';
+import {CardCatalog, GetSmallestCardTokenValue} from './Card.js';
 /*
 
 

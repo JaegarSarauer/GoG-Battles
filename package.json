@@ -2,18 +2,34 @@
     "name": "ethglobalgoggame",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
+    "main": "./src/serverIndex.js",
     "scripts": {
-        "dev": "npx webpack serve --env=development"
+        "dev": "npx webpack serve --env=development",
+        "dev-server": "webpack-dev-server --mode development --env=development",
+        "dev-http": "http-server ./src/index.js -a 127.0.0.1",
+        "build-dev": "webpack --mode development --env=development",
+        "run-server": "node ./src/serverIndex.js"
     },
     "author": "Jaegar Sarauer <jaegars@hotmail.com> (http://jaegarsarauer.com/)",
     "license": "ISC",
     "devDependencies": {
         "webpack-cli": "^4.8.0",
-        "webpack-dev-server": "^4.2.1"
+        "webpack-dev-server": "^4.3.0"
     },
+    "type": "module",
     "dependencies": {
+        "@metamask/detect-provider": "^1.2.0",
+        "authereum": "^0.1.14",
+        "axios": "^0.22.0",
+        "buffer": "^6.0.3",
+        "crypto-browserify": "^3.12.0",
+        "express": "^4.17.1",
+        "https-browserify": "^1.0.0",
+        "os-browserify": "^0.3.0",
+        "stream-browserify": "^3.0.0",
+        "stream-http": "^3.2.0",
         "web3": "^1.6.0",
+        "web3modal": "^1.9.4",
         "webpack": "^5.53.0"
     }
 }

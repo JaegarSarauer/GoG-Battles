@@ -1,4 +1,4 @@
-const Team = require('./Team').Team;
+const Team = require('./Team.js').Team;
 
 /*
 How the battle works:

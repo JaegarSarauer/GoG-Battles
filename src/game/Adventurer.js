@@ -1,8 +1,11 @@
-import Stats from "./Stats";
-import { EquipmentClassToIndex } from "./Constants";
+import Stats from "./Stats.js";
+import { EquipmentClassToIndex } from "./Constants.js";
+import State from "./State.js";
 
-export default class Adventurer {
-    constructor() {
+export default class Adventurer extends State {
+    constructor(advID) {
+        super('Adventurer.js');
+        this.advID = advID;
         this.stats = new Stats([0,0,0],[0,0,0],100);
         this.cardSlots = {
             HELMET: null,
@@ -32,7 +35,9 @@ export default class Adventurer {
 
     // Returns damage applied
     damage(damage) {
+        let preHP = this.stats.hp;
         this.stats.hp = Math.max(0, this.stats.hp - Math.max(0, Math.floor(damage)));
+        return preHP - this.stats.hp;
     }
 
     attack(attackerStats) {
@@ -46,7 +51,7 @@ export default class Adventurer {
         } else if (pointsDifference <= 0) {
             dmgAmount = Math.ceil(Math.max(1, 5 + pointsDifference));
         }
-        this.damage(dmgAmount);
+        return this.damage(dmgAmount);
     }
 
     heal(healHP) {
@@ -78,5 +83,38 @@ export default class Adventurer {
 
         this.stats = Stats.subtract(this.stats, card.totalStats);
         this.cardSlots[card.equipmentType] = null;
+    }
+
+    toJSON(index) {
+        return Object.assign({}, this._toJSON(), {
+            advID: this.advID,
+            stats: this.stats.toJSON('Stats.js'),
+            cardSlots: this.cardSlots,
+        });
+    }
+
+    fromJSON(obj) {
+        if (!this._fromJSON(obj)) {
+            return false;
+        }
+
+        if (obj.advID == null || obj.advID < 0 || obj.advID > 4) {
+            return false;
+        }
+        this.advID = obj.advID;
+        
+        if (!obj.stats || obj.stats.type != 'Stats.js' || !this.stats.fromJSON(obj.stats)) {
+            return false;
+        }
+
+        if (obj.cardSlots == null || typeof Object != obj.cardSlots) {
+            return false;
+        }
+        let slotKeys = Object.keys();
+        for (let i = 0; i < slotKeys.length; ++i) {
+            
+        }
+
+        return true;
     }
 }

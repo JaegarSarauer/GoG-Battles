@@ -1,10 +1,11 @@
-import Card, { CardCatalog } from './game/Card';
+import Card, { CardCatalog } from './game/Card.js';
 import Account from './game/Account';
 import USDCContract from './game/USDCContract';
 import CardGeneratorTester from './CardGeneratorTester';
-import battleManagerInstance from './game/BattleManager';
-import Team from './game/Team';
-import { BattleMoveToData, DataToBattleMove, EquipmentType } from './game/Constants';
+import battleManagerInstance from './game/BattleManager.js';
+import Team from './game/Team.js';
+import { BattleMoveToData, DataToBattleMove, EquipmentType } from './game/Constants.js';
+import { serverInstance } from './Server';
 
 class Controller {
     constructor() {
@@ -290,7 +291,7 @@ class AccountController extends Controller {
         if (this.account.checkHasCards(this.playerTeam.getCardsUsed())) {
             battleManagerInstance.joinBattleQueue(this.playerTeam);
         } else {
-            window.alert('team does not have valid cards');
+            console.warn('team does not have valid cards');
         }
     }
 
@@ -392,6 +393,10 @@ let handle = setInterval(() => {
         gameController = new GameController();
         gameController.addChild(new MainGameBar());
         gameController.addChild(new BattleManagerController());
+
+        serverInstance.start();
+
+        //console.info(CardCatalog)
 
         //new CardGeneratorTester().createAccounts();
     } else {

@@ -1,6 +1,6 @@
-import * as C from './Constants';
-import ModifierRollTable from './ModifierRollTable';
-import Stats from './Stats';
+import * as C from './Constants.js';
+import ModifierRollTable from './ModifierRollTable.js';
+import Stats from './Stats.js';
 
 // Auto updated
 var smallestTokenValue = 10000000;
@@ -42,8 +42,16 @@ class CardDef {
         }
     }
 
-    createValidCardsFromDef(cardName) {
+    createValidCardsFromDef(cardKeyName) {
         let cards = [];
+        let cardWords = cardKeyName.split('_');
+        let cardName = '';
+        for (let i = 0; i < cardWords.length; ++i) {
+            cardName += cardWords[i].charAt(0).toUpperCase() + cardWords[i].substr(1).toLowerCase();
+            if (i < cardWords.length - 1) {
+                cardName += ' ';
+            }
+        }
         for (let i = 0; i < this.modifierRollTable.modifierArray.length; ++i) {
             let modifierID = this.modifierRollTable.modifierArray[i];
             let modifierDef = C.Modifiers[modifierID];
@@ -51,10 +59,12 @@ class CardDef {
                 let rarityPoints = this.rarityBasePoints + modifierDef.rarityPoints[j];
                 let rarityTier = C.RarityPointToTier(rarityPoints);
                 let modifierData = new ModifierData(modifierID, j);
+                let modifierFullName = C.Modifiers[modifierID].name + (modifierData.modifierQuality > 1 ? ' (x' + modifierData.modifierQuality + ')' : '');
+                let fullCardName = cardName + (modifierID == 'NONE' ? '' : ' of ' + modifierFullName);
                 if (this.GOGTokenBaseValue < smallestTokenValue) {
                     smallestTokenValue = this.GOGTokenBaseValue;
                 }
-                let card = new Card(cardName, this.equipmentType, this.equipmentClass, this.subType, this.baseStats, rarityTier, modifierData, this.GOGTokenBaseValue);
+                let card = new Card(fullCardName, this.equipmentType, this.equipmentClass, this.subType, this.baseStats, rarityTier, modifierData, this.GOGTokenBaseValue, cardKeyName.toLowerCase());
                 cards.push(card);
             }
         }
@@ -65,7 +75,7 @@ class CardDef {
 var cardIDCounter = 0;
 
 class Card {
-    constructor(cardName, equipmentType, equipmentClass, subType, baseStats, rarityTier, modifer, GOGTokenValue) {
+    constructor(cardName, equipmentType, equipmentClass, subType, baseStats, rarityTier, modifer, GOGTokenValue, assetName) {
         this.name = cardName;
         this.cardID = cardIDCounter++;
         this.equipmentType = equipmentType;
@@ -75,6 +85,7 @@ class Card {
         this.modifier = modifer;
         this.GOGTokenValue = GOGTokenValue;
         this.baseStats = baseStats;
+        this.assetName = assetName;
         this.totalStats = Stats.combine(this.baseStats, this.modifier.stats);
         this.rollChance = C.CalculateRollChance(C.RarityTierToPoint[this.rarityTier], this.modifier.rarityPoints);
     }

@@ -11,10 +11,17 @@ module.exports = (env, argv) => {
         },
         resolve: {
             extensions: ['.js'],
+            fallback: { 
+                "stream": require.resolve("stream-browserify"),
+                "crypto": require.resolve("crypto-browserify"),
+                "http": require.resolve("stream-http"),
+                "https": require.resolve("https-browserify"),
+                "os": require.resolve("os-browserify/browser")
+             }
         },
         performance: {
-            maxEntrypointSize: 4096000,
-            maxAssetSize: 4096000
+            maxEntrypointSize: 40960000,
+            maxAssetSize: 40960000
         },
         devtool: (argv.env == 'production' ? 'hidden-nosources-source-map' : 'inline-source-map'),
         devServer: {
@@ -29,6 +36,9 @@ module.exports = (env, argv) => {
                 'process.env': {
                     'ENV': {}//JSON.stringify(getRuntimeParameters(argv.env, argv.platform, argv))
                 }
+            }),
+            new webpack.ProvidePlugin({
+                Buffer: ['buffer', 'Buffer'],
             })
         ],
         module: {
