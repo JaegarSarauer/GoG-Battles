@@ -37,11 +37,27 @@ let gameController = () => {
                 player1Address: account.address,
             });
             web3ManagerInstance.signBattleLog(battleLog, (signData) => {
-                console.info(signData);
+                console.info({signedBattleLog: signData.battleLog.toJSON()});
             })
         });
     }
     body.appendChild(createBattleButton);
+
+    let joinBattleButton = document.createElement('button');
+    joinBattleButton.innerText = 'Join Battle';
+    joinBattleButton.onclick = () => {
+        web3ManagerInstance.selectedAccountID = Number(privateInput.value);
+        web3ManagerInstance.getAccount((account) => {
+            let battleLog = new BattleLog().fromJSON(JSON.parse(messageInput.value));
+            battleLog.createLog(BattleLogMessageType.JOIN_BATTLE, {
+                player2Address: account.address,
+            });
+            web3ManagerInstance.signBattleLog(battleLog, (signData) => {
+                console.info({signedBattleLog: signData.battleLog.toJSON()});
+            });
+        });
+    }
+    body.appendChild(joinBattleButton);
 
     setup = true;
 };

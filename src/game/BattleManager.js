@@ -100,11 +100,12 @@ export class BattleLogSimulator {
     }
 
     verifyCreateBattle() {
+        let log = this.battleLog.getBattleLog();
         let log0 = this.battleLog.getLastMessage();
         if (this.battleTurn != 0) {
             return false;
         }
-        if (log0.data.player1Address != log0.address) {
+        if (log0.data.player1Address != log.address) {
             return false;
         }
         if (this.team1 != null) {
@@ -119,11 +120,16 @@ export class BattleLogSimulator {
     }
 
     verifyJoinBattle() {
+        let log = this.battleLog.getBattleLog();
+        let log0 = this.battleLog.messages[0];
         let log1 = this.battleLog.getLastMessage();
         if (this.battleTurn != 1) {
             return false;
         }
-        if (log1.data.player2Address != log1.address) {
+        if (log1.data.player2Address != log.address) {
+            return false;
+        }
+        if (log0.data.player1Address == log1.data.player2Address) {
             return false;
         }
         if (this.team2 != null) {
@@ -272,7 +278,9 @@ export class BattleLog extends PubSub {
         if (this.needsSignature) {
             return false;
         }
-        if (this.address != null && this.signature != null) {
+        if (this.address != null && this.signature != null
+            && !this.messages[this.messages.length - 1].address
+            && !this.messages[this.messages.length - 1].signature) {
             this.messages[this.messages.length - 1].address = this.address;
             this.messages[this.messages.length - 1].signature = this.signature;
             this.address = null;
@@ -295,8 +303,8 @@ export class BattleLog extends PubSub {
 
     getLastMessage() {
         let lastMessage = this.messages[this.messages.length - 1];
-        lastMessage.address = lastMessage.address || this.address;
-        lastMessage.signature = lastMessage.signature || this.signature;
+        // lastMessage.address = lastMessage.address || this.address;
+        // lastMessage.signature = lastMessage.signature || this.signature;
         return lastMessage;
     }
 
@@ -305,12 +313,25 @@ export class BattleLog extends PubSub {
         let battleLog = new BattleLog();
         let messages = this.messages.slice(0, realLogIndex);
         battleLog.messages = messages;
-        battleLog.address = messages[messages.length-1].address;
-        battleLog.signature = messages[messages.length-1].signature;
-        delete battleLog.messages[messages.length-1].address;
-        delete battleLog.messages[messages.length-1].signature;
+        if (messages[messages.length-1].address && messages[messages.length-1].signature) {
+            battleLog.address = messages[messages.length-1].address;
+            battleLog.signature = messages[messages.length-1].signature;
+            delete battleLog.messages[messages.length-1].address;
+            delete battleLog.messages[messages.length-1].signature;
+        } else if (this.address && this.signature) {
+            battleLog.address = this.address;
+            battleLog.signature = this.signature;
+        }
 
         return battleLog;
+    }
+
+    toJSON() {
+        return {
+            messages: this.messages,
+            address: this.address,
+            signature: this.signature,
+        };
     }
 
     fromJSON(data) {

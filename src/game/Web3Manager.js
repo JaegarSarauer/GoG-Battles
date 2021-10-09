@@ -3,6 +3,23 @@ import Web3 from 'web3';
 //import Authereum from "authereum";
 import detectEthereumProvider from '@metamask/detect-provider'
 
+import sortDeepObjectArrays from 'sort-deep-object-arrays';
+
+class ObjectOrderer {
+    constructor() {
+    }
+
+    getOrdered(objIn) {
+        let dataOut = {};
+        return this._orderObj(objIn, dataOut);
+        //return dataOut;
+    }
+
+    _orderObj(objectIn) {
+        return sortDeepObjectArrays(objectIn);
+    }
+}
+
 export class Web3Manager {
     constructor(isServer) {
         this.web3 = null;
@@ -62,11 +79,7 @@ export class Web3Manager {
         this.getAccount((account) => {
             console.info(account);
             if (account != null) {
-                let msg = JSON.stringify(message, (key, value) => {
-                    if (value != null) 
-                        return value;
-                });
-                let signatureObj = account.sign(msg);
+                let signatureObj = account.sign(this.sanitizeMessage(message));
                 let resultObj = {
                     address: account.address,
                     message: JSON.parse(signatureObj.message),
@@ -89,12 +102,18 @@ export class Web3Manager {
         });
     }
 
-    verifySignature(message, address, signature) {
-        let msg = JSON.stringify(message, (key, value) => {
+    sanitizeMessage(message) {
+        let ordered = new ObjectOrderer().getOrdered(message);
+        let msg = JSON.stringify(ordered, (key, value) => {
             if (value != null) 
                 return value;
         });
-        return this.web3.eth.accounts.recover(msg, signature) == address;
+        console.info(msg);
+        return msg;
+    }
+
+    verifySignature(message, address, signature) {
+        return this.web3.eth.accounts.recover(this.sanitizeMessage(message), signature) == address;
     }
 
     verifyBattleLog(battleLog) {
