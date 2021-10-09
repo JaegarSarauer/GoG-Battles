@@ -4,30 +4,41 @@ import Web3 from 'web3';
 import detectEthereumProvider from '@metamask/detect-provider'
 
 export class Web3Manager {
-    constructor() {
+    constructor(isServer) {
         this.web3 = null;
         this.onReady = () => {};
-
-        // detectEthereumProvider().then((provider) => {
-        //     console.info(provider)
-        //     if (provider != null) {
-        //         this.web3 = new Web3(provider);
-        //         this.onReady(this.web3);
-        //     } else {
-        //         console.info('Error connecting to MetaMask provider.');
-        //         this.web3 = new Web3('https://mainnet.infura.io');
-        //         this.onReady(this.web3);
-        //     }
-        // }, (err) => {
-        //     console.info(err)
-        // });
+        this.isServer = isServer;
         
         this.selectedAccountID = 0;
         this.accounts = [];
     }
 
+    start() {
+        if (!this.isServer) {
+            detectEthereumProvider().then((provider) => {
+                console.info(provider)
+                if (provider != null) {
+                    this.web3 = new Web3(provider);
+                    this.onReady(this.web3);
+                } else {
+                    console.info('Error connecting to MetaMask provider.');
+                    this.web3 = new Web3('https://mainnet.infura.io');
+                    this.onReady(this.web3);
+                }
+            }, (err) => {
+                console.info(err)
+            });
+        } else {
+            this.web3 = new Web3();
+        }
+    }
+
     isReady() {
         return this.web3 != null;
+    }
+
+    loadAccountFromPrivateKey(privateKey) {
+        this.accounts.push(this.web3.eth.accounts.privateKeyToAccount(privateKey));
     }
 
     getAccount(callback) {
@@ -38,7 +49,7 @@ export class Web3Manager {
                     callback(this.accounts[this.selectedAccountID]);
                 } else {
                     //TEMP TESTING, ERROR HANDLE HERE
-                    this.accounts[0] = this.web3.eth.accounts.create();
+                    this.accounts[this.selectedAccountID] = this.web3.eth.accounts.create();
                     callback(this.accounts[this.selectedAccountID]);
                     //TEMP TESTING, ERROR HANDLE HERE
                 }
@@ -51,10 +62,14 @@ export class Web3Manager {
         this.getAccount((account) => {
             console.info(account);
             if (account != null) {
-                let signatureObj = account.sign(message);
+                let msg = JSON.stringify(message, (key, value) => {
+                    if (value != null) 
+                        return value;
+                });
+                let signatureObj = account.sign(msg);
                 let resultObj = {
                     address: account.address,
-                    message: signatureObj.message,
+                    message: JSON.parse(signatureObj.message),
                     signature: signatureObj.signature,
                 };
                 callback(resultObj);
@@ -65,23 +80,27 @@ export class Web3Manager {
     }
 
     signBattleLog(battleLog, callback) {
-        this.sign(battleLog.logs, (signatureObj) => {
+        this.sign(battleLog.messages, (signatureObj) => {
             let result = false;
             if (signatureObj != null) {
                 result = battleLog.signLog(signatureObj.address, signatureObj.signature);
             }
-            callback(result);
+            callback({result, signatureObj, battleLog});
         });
     }
 
-    verifySignature(message, signature, address) {
-        return this.web3.eth.accounts.recover(message, signature) == address;
+    verifySignature(message, address, signature) {
+        let msg = JSON.stringify(message, (key, value) => {
+            if (value != null) 
+                return value;
+        });
+        return this.web3.eth.accounts.recover(msg, signature) == address;
     }
 
     verifyBattleLog(battleLog) {
-        return this.verifySignature(battleLog.getBattleLog(), battleLog.address, battleLog.signature);
+        return this.verifySignature(battleLog.messages, battleLog.address, battleLog.signature);
     }
 }
 
-const web3ManagerInstance = new Web3Manager();
+const web3ManagerInstance = new Web3Manager(true);
 export default web3ManagerInstance;

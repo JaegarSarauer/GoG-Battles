@@ -40,5 +40,17 @@
             "port": 8080,
             "sourceMaps": true
         },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Server",
+            "cwd": "${workspaceFolder}",
+            "runtimeArgs": ["run", "run-server"],
+            "args": [], 
+            "runtimeExecutable": "npm",
+            "address": "[::1]",
+            "port": 8080,
+            "sourceMaps": true
+        },
     ]
 }

@@ -70,7 +70,10 @@ export class BattleLogSimulator {
     validateExpectedAddress(turn) {
         let logAtTurn = this.battleLog.getBattleLog(turn);
         let verify = web3ManagerInstance.verifyBattleLog(logAtTurn);
-        let addressCorrect = logAtTurn.address == (turn % 2 == 0 ? this.team1.address : this.team2.address);
+        let addressCorrect = true;
+        if (turn > 1) {
+            addressCorrect = logAtTurn.address == (turn % 2 == 0 ? this.team1.address : this.team2.address);
+        }
         return verify && addressCorrect;
     }
 
@@ -79,7 +82,7 @@ export class BattleLogSimulator {
     }
 
     verifyBattleCards() {
-        let log = this.battleLog.getBattleLog(this.battleTurn);
+        let log = this.battleLog.getLastMessage();
 
         let team = this.getTeamFromAddress(log.address);
         team.setCards(log.data.advCards);
@@ -88,7 +91,7 @@ export class BattleLogSimulator {
     }
 
     verifyBattleTurnChanged() {
-        let log = this.battleLog.getBattleLog(this.battleTurn);
+        let log = this.battleLog.getLastMessage();
 
         let team = this.getTeamFromAddress(log.address);
         team.battleTurn.setMoves(log.data.battleTurn);
@@ -97,7 +100,7 @@ export class BattleLogSimulator {
     }
 
     verifyCreateBattle() {
-        let log0 = this.battleLog.getBattleLog(this.battleTurn);
+        let log0 = this.battleLog.getLastMessage();
         if (this.battleTurn != 0) {
             return false;
         }
@@ -112,10 +115,11 @@ export class BattleLogSimulator {
         }
 
         this.team1 = new Team(log0.address);
+        return true;
     }
 
     verifyJoinBattle() {
-        let log1 = this.battleLog.getBattleLog(1);
+        let log1 = this.battleLog.getLastMessage();
         if (this.battleTurn != 1) {
             return false;
         }
@@ -130,12 +134,13 @@ export class BattleLogSimulator {
         }
 
         this.team2 = new Team(log1.address);
+        return true;
     }
 
     _simulateTurn(battleLogMessageType, data) {
         switch(battleLogMessageType) {
             case BattleLogMessageType.CREATE_BATTLE:
-                return this.verifyJoinBattle();
+                return this.verifyCreateBattle();
             case BattleLogMessageType.JOIN_BATTLE:
                 return this.verifyJoinBattle();
             case BattleLogMessageType.CHANGE_BATTLE_TURN:
@@ -147,20 +152,35 @@ export class BattleLogSimulator {
         }
     }
 
-    simulate() {
-        while (this.battleTurn < battleLog.logs.length) {
-            let log = this.battleLog.getBattleLog(this.battleTurn);
-            if (!this.validateExpectedAddress(this.battleLog)) {
-                return false;
-            }
-            if (!this._simulateTurn(log.data)) {
-                return false;
-            }
-            this.battleTurn++;
+    simulateMessage() {
+        let log = this.battleLog.getLastMessage();
+        if (!this.validateExpectedAddress(this.battleLog.messages.length - 1)) {
+            return false;
         }
+        if (!this._simulateTurn(log.battleLogMessageType, log.data)) {
+            return false;
+        }
+        this.battleTurn++;
+        return true;
     }
 
+    addMessage(battleLogMessage, logAddress, logSignature) {
+        if (this.battleLog == null) {
+            this.battleLog = new BattleLog();
+        }
+        if (this.battleTurn != this.battleLog.messages.length) {
+            return false;
+        }
+        this.battleLog.createLog(battleLogMessage.battleLogMessageType, battleLogMessage.data);
+        this.battleLog.signLog(logAddress, logSignature);
+        let res = this.simulateMessage();
+        if (!res) {
+            this.battleLog.messages.pop();
+            return false;
+        }
 
+        return true;
+    }
 }
 
 class BattleLogMessage {
@@ -179,7 +199,7 @@ class BattleLogMessage {
 
         let defKeys = Object.keys(def);
         for (let i = 0; i < defKeys.length; ++i) {
-            if (data[defKeys[i]] == null) {
+            if (this.data[defKeys[i]] == null) {
                 return false;
             }
         }
@@ -269,22 +289,37 @@ export class BattleLog extends PubSub {
         }
         this.address = address;
         this.signature = signature;
+        this.needsSignature = false;
         return true;
     }
 
     getLastMessage() {
-        return this.messages[this.messages.length - 1];
+        let lastMessage = this.messages[this.messages.length - 1];
+        lastMessage.address = lastMessage.address || this.address;
+        lastMessage.signature = lastMessage.signature || this.signature;
+        return lastMessage;
     }
 
-    getBattleLog(logIndex = this.logs.length) {
+    getBattleLog(logIndex = this.messages.length) {
+        let realLogIndex = Math.max(0, Math.min(logIndex + 1, this.messages.length));
         let battleLog = new BattleLog();
-        let logs = this.logs.slice(0, Math.max(0, Math.min(logIndex, this.logs.length)));
-        battleLog.logs = logs;
-        battleLog.address = logs[logs.length-1].address;
-        battleLog.signature = logs[logs.length-1].signature;
-        battleLog.logs[logs.length-1].address = null;
-        battleLog.logs[logs.length-1].signature = null;
+        let messages = this.messages.slice(0, realLogIndex);
+        battleLog.messages = messages;
+        battleLog.address = messages[messages.length-1].address;
+        battleLog.signature = messages[messages.length-1].signature;
+        delete battleLog.messages[messages.length-1].address;
+        delete battleLog.messages[messages.length-1].signature;
+
         return battleLog;
+    }
+
+    fromJSON(data) {
+        let bl = new BattleLog();
+        bl.messages = data.messages;
+        bl.needsSignature = data.needsSignature || false;
+        bl.address = data.address || null;
+        bl.signature = data.signature || null;
+        return bl;
     }
 }
 

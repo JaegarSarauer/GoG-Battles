@@ -2,13 +2,13 @@
     "name": "ethglobalgoggame",
     "version": "1.0.0",
     "description": "",
-    "main": "./src/serverIndex.js",
+    "main": "index.js",
     "scripts": {
         "dev": "npx webpack serve --env=development",
         "dev-server": "webpack-dev-server --mode development --env=development",
         "dev-http": "http-server ./src/index.js -a 127.0.0.1",
         "build-dev": "webpack --mode development --env=development",
-        "run-server": "node ./src/serverIndex.js"
+        "run-server": "node --experimental-modules ./src/serverIndex.js --env=isServer=true"
     },
     "author": "Jaegar Sarauer <jaegars@hotmail.com> (http://jaegarsarauer.com/)",
     "license": "ISC",

@@ -1,15 +1,17 @@
-import battleManagerInstance, { BattleLog } from './game/BattleManager.js';
+import battleManagerInstance, { BattleLog, BattleLogSimulator } from './game/BattleManager.js';
 import { BattleLogMessageType } from './game/Constants.js';
 import Team from './game/Team.js';
 import web3ManagerInstance from './game/Web3Manager.js';
-
 import express from 'express';
 
 class Server {
     constructor() {
         this.app = express();
+        this.app.use(express.json());
         this.player1Response = null;
         this.player2Response = null;
+
+        this.battleLogSimulator = new BattleLogSimulator();
 
         this.app.post('/changeAdventurerGear', (req, res) => {
             let teamID = req.body.teamID;
@@ -21,46 +23,45 @@ class Server {
             let battleTurnData = req.body.battleTurnData;
         });
 
-        this.app.post('/isPlayerInQueue', (req, res) => {
+        this.app.get('/isPlayerInQueue', (req, res) => {
             if (battleManagerInstance.battleQueue.length == 1) {
-                res.send(200).end();
+                res.status(200).send(true).end();
             } else {
-                res.send(100).end();
+                res.status(200).send(false).end();
             }
         });
         this.app.post('/createBattle', (req, res) => {
-            let signedBattleLog = req.body.signedBattleLog;
+            let signedBattleLog = new BattleLog().fromJSON(req.body.signedBattleLog);
 
             if (battleManagerInstance.battleQueue > 0) {
-                res.status(100).end();
+                res.status(200).send(false).end();
                 return false;
             }
 
-            web3ManagerInstance.verifyBattleLog(signedBattleLog);
-
-
-            let battleLog = new BattleLog();
-            battleLog.createLog(BattleLogMessageType.CREATE_BATTLE, {
-                player1Team: address
-            });
+            if (!this.validateAndUpdateSimulation(signedBattleLog)) {
+                res.status(200).send(false).end();
+                return false;
+            }
 
             this.player1Response = res;
+            res.status(200).send(true);
         });
 
         this.app.post('/joinBattle', (req, res) => {
             let signedBattleLog = req.body.signedBattleLog;
 
-            web3ManagerInstance.verifyBattleLog(signedBattleLog);
+            if (battleManagerInstance.battleQueue < 1) {
+                res.status(200).send(false).end();
+                return false;
+            }
 
-            let team = new Team(signedBattleLog.getBattleLog(1).address);
-
-            battleManagerInstance.joinBattleQueue(team);
-
-            res.status(200).send({
-                team: JSON.stringify(team),
-            });
+            if (!this.validateAndUpdateSimulation(signedBattleLog)) {
+                res.status(200).send(false).end();
+                return false;
+            }
 
             this.player2Response = res;
+            res.status(200).send(true);
         });
 
         this.app.post('/claimWin', (req, res) => {
@@ -68,7 +69,24 @@ class Server {
         });
     }
 
+    validateAndUpdateSimulation(signedBattleLog) {
+        if (!web3ManagerInstance.verifyBattleLog(signedBattleLog)) {
+            return false;
+        }
+
+        if (!this.updateBattleSimulation(signedBattleLog)) {
+            return false;
+        }
+        return true;
+    }
+
+    updateBattleSimulation(signedBattleLog) {
+        let lastMessage = signedBattleLog.getLastMessage();
+        return this.battleLogSimulator.addMessage(lastMessage, lastMessage.address, lastMessage.signature);
+    }
+
     start() {
+        web3ManagerInstance.start();
         console.info('Listening for connections...');
         this.app.listen(3093);
     }

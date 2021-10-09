@@ -244,4 +244,4 @@ const BuildCardCatalog = () => {
     }
 };
 
-BuildCardCatalog();
+//BuildCardCatalog();
