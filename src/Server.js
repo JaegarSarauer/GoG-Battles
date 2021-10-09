@@ -20,8 +20,14 @@ class Server {
         });
 
         this.app.post('/changeBattleTurn', (req, res) => {
-            let teamID = req.body.teamID;
-            let battleTurnData = req.body.battleTurnData;
+            let signedBattleLog = new BattleLog().fromJSON(req.body.signedBattleLog);
+
+            if (!this.validateAndUpdateSimulation(signedBattleLog)) {
+                res.status(200).send(false).end();
+                return false;
+            }
+
+            res.status(200).send(true);
         });
 
         this.app.get('/isPlayerInQueue', (req, res) => {
@@ -92,27 +98,6 @@ class Server {
         web3ManagerInstance.start();
         console.info('Listening for connections...');
         this.app.listen(3093);
-
-        let test = {
-            freshest: [{
-                water: 'is',
-                the: 'best',
-                type: 'of',
-                thing: 'we',
-                know: 'although',
-                a: 404,
-            }, {
-                percy: 'flax',
-                doogle: [{racist: true}],
-            }, [4, 9, 0], {
-                robert: 'awlays',
-                name: 'not a',
-                a: true
-            }],
-            watchit: [{f:4}, {g:5}, {x:6}],
-        };
-
-        console.info(web3ManagerInstance.sanitizeMessage(test));
     }
 }
 

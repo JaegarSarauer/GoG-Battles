@@ -4,8 +4,8 @@ import { CardCatalog } from "./Card.js";
 import { MoveResult } from "./MoveResult.js";
 
 export default class Team {
-    constructor(accountName) {
-        this.accountName = accountName;
+    constructor(address) {
+        this.address = address;
         this.adventurers = [new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer(), new Adventurer()];
         this.battleTurn = BattleTurn.default();
         this.moveResult = new MoveResult();

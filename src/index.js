@@ -1,4 +1,5 @@
 import { BattleLog } from './game/BattleManager.js';
+import { BattleTurn } from './game/BattleTurn.js';
 import { BattleLogMessageType } from './game/Constants.js';
 import web3ManagerInstance from './game/Web3Manager.js';
 
@@ -58,6 +59,29 @@ let gameController = () => {
         });
     }
     body.appendChild(joinBattleButton);
+
+    let moveInput = document.createElement('input');
+    moveInput.defaultValue = JSON.stringify({advOrder: [0, 1, 2, 3, 4], advMoves: ["ATTACK_ADV0", "ATTACK_ADV1", "ATTACK_ADV2", "ATTACK_ADV3", "ATTACK_ADV4"]});
+    body.appendChild(moveInput);
+
+    let changeBattleTurnButton = document.createElement('button');
+    changeBattleTurnButton.innerText = 'Change Battle Turn';
+    changeBattleTurnButton.onclick = () => {
+        let battleTurnJSON = JSON.parse(moveInput.value);
+        web3ManagerInstance.selectedAccountID = Number(privateInput.value);
+        web3ManagerInstance.getAccount((account) => {
+            let battleLog = new BattleLog().fromJSON(JSON.parse(messageInput.value));
+            let battleTurn = new BattleTurn();
+            battleTurn.setMoves(battleTurnJSON);
+            battleLog.createLog(BattleLogMessageType.CHANGE_BATTLE_TURN, {
+                battleTurn,
+            });
+            web3ManagerInstance.signBattleLog(battleLog, (signData) => {
+                console.info({signedBattleLog: signData.battleLog.toJSON()});
+            });
+        });
+    }
+    body.appendChild(changeBattleTurnButton);
 
     setup = true;
 };

@@ -115,7 +115,7 @@ export class BattleLogSimulator {
             return false;
         }
 
-        this.team1 = new Team(log0.address);
+        this.team1 = new Team(log.address);
         return true;
     }
 
@@ -139,7 +139,7 @@ export class BattleLogSimulator {
             return false;
         }
 
-        this.team2 = new Team(log1.address);
+        this.team2 = new Team(log.address);
         return true;
     }
 
