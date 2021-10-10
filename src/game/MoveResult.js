@@ -1,6 +1,7 @@
 export class MoveResult {
     constructor() {
-        this.moves = [];
+        this.history = [];
+        this.moves = [{}, {}, {}, {}, {}];
     }
 
     addMoveResult(advID, defenderID, damage, didKill) {
@@ -12,6 +13,7 @@ export class MoveResult {
     }
 
     reset() {
-        this.moves = [];
+        this.history.push(this.moves);
+        this.moves = [{}, {}, {}, {}, {}];
     }
 }

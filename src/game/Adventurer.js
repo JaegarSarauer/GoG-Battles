@@ -36,7 +36,7 @@ export default class Adventurer extends State {
     // Returns damage applied
     damage(damage) {
         let preHP = this.stats.hp;
-        this.stats.hp = Math.max(0, this.stats.hp - Math.max(0, Math.floor(damage)));
+        this.stats.hp = 0;//Math.max(0, this.stats.hp - Math.max(0, Math.floor(damage)));
         return preHP - this.stats.hp;
     }
 

@@ -69,7 +69,14 @@ export class BattleLogSimulator {
 
     validateExpectedAddress(turn) {
         let logAtTurn = this.battleLog.getBattleLog(turn);
-        let verify = web3ManagerInstance.verifyBattleLog(logAtTurn);
+        let lastMessage = this.battleLog.getLastMessage();
+        let verify = false;
+        // Created by server, no signer.
+        if (logAtTurn.address == null && lastMessage.battleLogMessageType == 'MOVE_RESULT') {
+            verify = true;
+        } else {
+            verify = web3ManagerInstance.verifyBattleLog(logAtTurn);
+        }
         let addressCorrect = true;
         // if (turn > 1) {
         //     addressCorrect = logAtTurn.address == (turn % 2 == 0 ? this.team1.address : this.team2.address);
@@ -164,7 +171,37 @@ export class BattleLogSimulator {
     }
 
     verifyMoveResult() {
-        
+        let log = this.battleLog.getBattleLog();
+        let lastMsg = this.battleLog.getLastMessage();
+        let lastTurn = this.battle.turn - 1;
+        if (lastTurn < 0) {
+            return false;
+        }
+
+        let p1Moves = lastMsg.data.player1Moves;
+        let p2Moves = lastMsg.data.player2Moves;
+        let p1MoveLog = this.team1.moveResult.history[lastTurn];
+        let p2MoveLog = this.team2.moveResult.history[lastTurn];
+        for (let i = 0; i < 5; ++i) {
+            if (p1Moves[i] != null) {
+                if (p1Moves[i].defenderAdvID != p1MoveLog[i].defenderAdvID)
+                    return false;
+                if (p1Moves[i].damage != p1MoveLog[i].damage)
+                    return false;
+                if (p1Moves[i].didKill != p1MoveLog[i].didKill)
+                    return false;
+            }
+            
+            if (p2Moves[i] != null) {
+                if (p2Moves[i].defenderAdvID != p2MoveLog[i].defenderAdvID)
+                    return false;
+                if (p2Moves[i].damage != p2MoveLog[i].damage)
+                    return false;
+                if (p2Moves[i].didKill != p2MoveLog[i].didKill)
+                    return false;
+            }
+        }
+        return true;
     }
 
     verifyClaimWin() {
@@ -211,14 +248,21 @@ export class BattleLogSimulator {
         if (this.battleLog == null) {
             this.battleLog = new BattleLog();
         }
-        if (this.battleTurn != this.battleLog.messages.length) {
-            return false;
+        if (this.battleTurn < this.battleLog.messages.length) {
+            for (let i = this.battleTurn; i < this.battleLog.messages.length; ++i) {
+                let res = this.simulateMessage();
+                if (!res) {
+                    return false;
+                }
+            }
         }
         this.battleLog.createLog(battleLogMessage.battleLogMessageType, battleLogMessage.data);
         this.battleLog.signLog(logAddress, logSignature);
         let res = this.simulateMessage();
         if (!res) {
             this.battleLog.messages.pop();
+            this.battleLog.address = null;
+            this.battleLog.signature = null;
             return false;
         }
 
@@ -276,6 +320,7 @@ export class BattleLog extends PubSub {
             this.createLog(BattleLogMessageType.MOVE_RESULT, {
                 player1Moves, player2Moves, 
             });
+            this.needsSignature = false;
         });
         this.listeners.push({key: 'moveResult', listenerID});
 
@@ -284,6 +329,7 @@ export class BattleLog extends PubSub {
             this.createLog(BattleLogMessageType.CLAIM_WIN, {
                 winnerAddress, 
             });
+            this.needsSignature = false;
         });
         this.listeners.push({key: 'completeBattle', listenerID});
 
@@ -468,8 +514,6 @@ class Battle extends PubSub {
 
     runTeamTurns() {
         this.teamTurn = Math.abs(this.teamTurn - 1);
-        this.team1.moveResult.reset();
-        this.team2.moveResult.reset();
 
         let teamFirst = this._getTeam(this.teamTurn);
         let teamSecond = this._getTeam(Math.abs(this.teamTurn - 1));
@@ -480,10 +524,15 @@ class Battle extends PubSub {
             while (++teamSecondMoveID < 5 && !this.runMove(teamSecondMoveID, teamSecond, teamFirst)) {}
         }
 
-        this.publish('moveResult', {
-            player1Moves: this.team1.moveResult.moves,
-            player2Moves: this.team2.moveResult.moves,
-        });
+        if (!this.winnerAddress) {
+            this.publish('moveResult', {
+                player1Moves: this.team1.moveResult.moves,
+                player2Moves: this.team2.moveResult.moves,
+            });
+        }
+
+        this.team1.moveResult.reset();
+        this.team2.moveResult.reset();
 
         ++this.turn;
     }
@@ -497,8 +546,9 @@ class Battle extends PubSub {
         }
 
         if (!this._runMove(advMove, attackingTeam, advIDToMove, defendingTeam)) {
-            this.checkBattleWin();
+            
         }
+        this.checkBattleWin();
         return true;
     }
 
@@ -561,7 +611,6 @@ class Battle extends PubSub {
         }
 
         if (validDefenderFound) {
-            console.info(defendingTeam.adventurers[defenderAdvID], defenderAdvID, attackingTeam.adventurers[atkAdvID], atkAdvID)
             let damageDealt = defendingTeam.adventurers[defenderAdvID].attack(attackingTeam.adventurers[atkAdvID].stats);
             attackingTeam.moveResult.addMoveResult(atkAdvID, defenderAdvID, damageDealt, defendingTeam.adventurers[defenderAdvID].isDead());
             return true;
