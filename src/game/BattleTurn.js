@@ -4,6 +4,7 @@ export class BattleTurn {
     constructor() {
         this.advOrder = [0, 1, 2, 3, 4];
         this.advMoves = [BattleMove.ATTACK_ADV0, BattleMove.ATTACK_ADV1, BattleMove.ATTACK_ADV2, BattleMove.ATTACK_ADV3, BattleMove.ATTACK_ADV4];
+        this.readyForNextTurn = false;
     }    
 
     static default() {
@@ -19,5 +20,6 @@ export class BattleTurn {
             this.advOrder[i] = battleTurn.advOrder[i];
             this.advMoves[i] = battleTurn.advMoves[i];
         }
+        this.readyForNextTurn = true;
     }
 }

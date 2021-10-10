@@ -71,9 +71,9 @@ export class BattleLogSimulator {
         let logAtTurn = this.battleLog.getBattleLog(turn);
         let verify = web3ManagerInstance.verifyBattleLog(logAtTurn);
         let addressCorrect = true;
-        if (turn > 1) {
-            addressCorrect = logAtTurn.address == (turn % 2 == 0 ? this.team1.address : this.team2.address);
-        }
+        // if (turn > 1) {
+        //     addressCorrect = logAtTurn.address == (turn % 2 == 0 ? this.team1.address : this.team2.address);
+        // }
         return verify && addressCorrect;
     }
 
@@ -84,6 +84,10 @@ export class BattleLogSimulator {
     verifyBattleCards() {
         let log = this.battleLog.getLastMessage();
 
+        if (this.battle == null || this.battle.turn > 0) {
+            return false;
+        }
+
         let team = this.getTeamFromAddress(log.address);
         team.setCards(log.data.advCards);
 
@@ -91,10 +95,24 @@ export class BattleLogSimulator {
     }
 
     verifyBattleTurnChanged() {
-        let log = this.battleLog.getLastMessage();
+        let log = this.battleLog.getBattleLog();
+        let msg = this.battleLog.getLastMessage();
 
         let team = this.getTeamFromAddress(log.address);
-        team.battleTurn.setMoves(log.data.battleTurn);
+        if (team.battleTurn.readyForNextTurn) {
+            return false;
+        }
+
+        team.battleTurn.setMoves(msg.data.battleTurn);
+
+        if (this.team1.battleTurn.readyForNextTurn && this.team2.battleTurn.readyForNextTurn) {
+            if (this.battle.turn == 0) {
+                this.battle.startBattle();
+            }
+            this.battle.runTeamTurns();
+            this.team1.battleTurn.readyForNextTurn = false;
+            this.team2.battleTurn.readyForNextTurn = false;
+        }
 
         return true;
     }
@@ -132,7 +150,7 @@ export class BattleLogSimulator {
         if (log0.data.player1Address == log1.data.player2Address) {
             return false;
         }
-        if (this.team2 != null) {
+        if (this.team2 != null || this.team1 == null) {
             return false;
         }
         if (log1.battleLogMessageType != BattleLogMessageType.JOIN_BATTLE) {
@@ -140,6 +158,23 @@ export class BattleLogSimulator {
         }
 
         this.team2 = new Team(log.address);
+        this.battle = new Battle(Math.random(), this.team1, this.team2);
+        this.battleLog.subscribeToBattle(this.battle);
+        return true;
+    }
+
+    verifyMoveResult() {
+        
+    }
+
+    verifyClaimWin() {
+        let log = this.battleLog.getBattleLog();
+        let winMsg = this.battleLog.getLastMessage();
+
+        if (this.battle.winnerAddress != winMsg.data.winnerAddress) {
+            return false;
+        }
+
         return true;
     }
 
@@ -153,6 +188,8 @@ export class BattleLogSimulator {
                 return this.verifyBattleTurnChanged();
             case BattleLogMessageType.SET_CARDS:
                 return this.verifyBattleCards();
+            case BattleLogMessageType.MOVE_RESULT:
+                return this.verifyMoveResult();
             case BattleLogMessageType.CLAIM_WIN:
                 return this.verifyClaimWin();
         }
@@ -250,23 +287,23 @@ export class BattleLog extends PubSub {
         });
         this.listeners.push({key: 'completeBattle', listenerID});
 
-        listenerID = battle.subscribe('setBattleTurn', (data) => {
-            let teamID = data.teamID;
-            let battleTurn = data.battleTurn;
-            this.createLog(BattleLogMessageType.CHANGE_BATTLE_TURN, {
-                teamID, battleTurn, 
-            });
-        });
-        this.listeners.push({key: 'setBattleTurn', listenerID});
+        // listenerID = battle.subscribe('setBattleTurn', (data) => {
+        //     let teamID = data.teamID;
+        //     let battleTurn = data.battleTurn;
+        //     this.createLog(BattleLogMessageType.CHANGE_BATTLE_TURN, {
+        //         teamID, battleTurn, 
+        //     });
+        // });
+        // this.listeners.push({key: 'setBattleTurn', listenerID});
 
-        listenerID = battle.subscribe('setCards', (data) => {
-            let teamID = data.teamID;
-            let arrayOfAdvCards = data.arrayOfAdvCards;
-            this.createLog(BattleLogMessageType.SET_CARDS, {
-                teamID, arrayOfAdvCards, 
-            });
-        });
-        this.listeners.push({key: 'setCards', listenerID});
+        // listenerID = battle.subscribe('setCards', (data) => {
+        //     let teamID = data.teamID;
+        //     let arrayOfAdvCards = data.arrayOfAdvCards;
+        //     this.createLog(BattleLogMessageType.SET_CARDS, {
+        //         teamID, arrayOfAdvCards, 
+        //     });
+        // });
+        // this.listeners.push({key: 'setCards', listenerID});
     }
 
     createLog(battleLogMessageType, data) {
@@ -360,13 +397,13 @@ class Battle extends PubSub {
 
         this.teamTurn = 0;
 
+        this.winnerAddress = null;
+
         this.turn = 0;
         this.battleStartTimestamp = new Date().getTime();
         // this.battleInterval = setInterval(() => {
         //     this.runTeamTurns();
         // }, 5000);
-        this.battleLog = new BattleLog();
-        this.subscribeToBattle(this);
     }
 
     _getTeam(teamID) {
@@ -401,6 +438,7 @@ class Battle extends PubSub {
     }
 
     completeBattle(winnerAddress) {
+        this.winnerAddress = winnerAddress;
         this.publish('completeBattle', {
             winnerAddress,
         });
@@ -525,7 +563,7 @@ class Battle extends PubSub {
         if (validDefenderFound) {
             console.info(defendingTeam.adventurers[defenderAdvID], defenderAdvID, attackingTeam.adventurers[atkAdvID], atkAdvID)
             let damageDealt = defendingTeam.adventurers[defenderAdvID].attack(attackingTeam.adventurers[atkAdvID].stats);
-            attackingTeam.moveResult.setMoveResult(atkAdvID, defenderAdvID, damageDealt, defendingTeam.adventurers[defenderAdvID].isDead());
+            attackingTeam.moveResult.addMoveResult(atkAdvID, defenderAdvID, damageDealt, defendingTeam.adventurers[defenderAdvID].isDead());
             return true;
         } else {
             return false;

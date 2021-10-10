@@ -8,13 +8,16 @@ export class PubSub {
         if (this.listeners[key]) {
             let listenerKeys = Object.keys(this.listeners[key]);
             for (let i = 0; i < listenerKeys.length; ++i) {
-                listenerKeys[key][listenerKeys[i]](data);
+                this.listeners[key][listenerKeys[i]](data);
             }
         }
     }
 
     subscribe(key, callback) {
         let subKey = this.counter++;
+        if (!this.listeners[key]) {
+            this.listeners[key] = {};
+        }
         this.listeners[key][subKey] = callback;
         return subKey;
     }

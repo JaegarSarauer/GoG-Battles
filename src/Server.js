@@ -7,6 +7,12 @@ import express from 'express';
 class Server {
     constructor() {
         this.app = express();
+        this.app.use((req, res, next) => {
+            res.append('Access-Control-Allow-Origin', ['*']);
+            res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+            res.append('Access-Control-Allow-Headers', 'Content-Type');
+            next();
+        });
         this.app.use(express.json());
         this.player1Response = null;
         this.player2Response = null;
@@ -14,9 +20,15 @@ class Server {
         this.battleQueued = false;
         this.battleLogSimulator = new BattleLogSimulator();
 
-        this.app.post('/changeAdventurerGear', (req, res) => {
-            let teamID = req.body.teamID;
-            let arrayOfAdvCards = req.body.arrayOfAdvCards;
+        this.app.post('/changeAdventurerGear', (req, res) => { 
+            let signedBattleLog = new BattleLog().fromJSON(req.body.signedBattleLog);
+
+            if (!this.validateAndUpdateSimulation(signedBattleLog)) {
+                res.status(200).send(false).end();
+                return false;
+            }
+
+            res.status(200).send(true);
         });
 
         this.app.post('/changeBattleTurn', (req, res) => {
@@ -38,6 +50,13 @@ class Server {
                 res.status(200).send(false).end();
             }
         });
+
+        this.app.get('/clearBattle', (req, res) => {
+            this.battleQueued = false;
+            this.battleLogSimulator = new BattleLogSimulator();
+            res.status(200).send(true);
+        });
+
         this.app.post('/createBattle', (req, res) => {
             let signedBattleLog = new BattleLog().fromJSON(req.body.signedBattleLog);
 
@@ -74,7 +93,17 @@ class Server {
         });
 
         this.app.post('/claimWin', (req, res) => {
-            
+            let signedBattleLog = new BattleLog().fromJSON(req.body.signedBattleLog);
+
+            if (!this.validateAndUpdateSimulation(signedBattleLog)) {
+                res.status(200).send(false).end();
+                return false;
+            }
+
+            this.battleQueued = false;
+            this.battleLogSimulator = new BattleLogSimulator();
+
+            res.status(200).send(true);
         });
     }
 

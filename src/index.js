@@ -1,6 +1,7 @@
 import { BattleLog } from './game/BattleManager.js';
 import { BattleTurn } from './game/BattleTurn.js';
 import { BattleLogMessageType } from './game/Constants.js';
+import Team from './game/Team.js';
 import web3ManagerInstance from './game/Web3Manager.js';
 
 let setup = false;
@@ -82,6 +83,45 @@ let gameController = () => {
         });
     }
     body.appendChild(changeBattleTurnButton);
+
+    let gearInput = document.createElement('input');
+    gearInput.defaultValue = JSON.stringify(new Team().getArrayOfAdvCards());
+    body.appendChild(gearInput);
+
+    let changeCardsButton = document.createElement('button');
+    changeCardsButton.innerText = 'Set Cards';
+    changeCardsButton.onclick = () => {
+        let changeCardsJSON = JSON.parse(gearInput.value);
+        web3ManagerInstance.selectedAccountID = Number(privateInput.value);
+        web3ManagerInstance.getAccount((account) => {
+            let battleLog = new BattleLog().fromJSON(JSON.parse(messageInput.value));
+            let teamWithCards = new Team();
+            teamWithCards.setCards(changeCardsJSON);
+            battleLog.createLog(BattleLogMessageType.SET_CARDS, {
+                advCards: teamWithCards.getArrayOfAdvCards(),
+            });
+            web3ManagerInstance.signBattleLog(battleLog, (signData) => {
+                console.info({signedBattleLog: signData.battleLog.toJSON()});
+            });
+        });
+    }
+    body.appendChild(changeCardsButton);
+
+    let claimWinButton = document.createElement('button');
+    claimWinButton.innerText = 'Claim Win';
+    claimWinButton.onclick = () => {
+        web3ManagerInstance.selectedAccountID = Number(privateInput.value);
+        web3ManagerInstance.getAccount((account) => {
+            let battleLog = new BattleLog().fromJSON(JSON.parse(messageInput.value));
+            battleLog.createLog(BattleLogMessageType.CLAIM_WIN, {
+                winnerAddress: account.address,
+            });
+            web3ManagerInstance.signBattleLog(battleLog, (signData) => {
+                console.info({signedBattleLog: signData.battleLog.toJSON()});
+            });
+        });
+    }
+    body.appendChild(claimWinButton);
 
     setup = true;
 };
